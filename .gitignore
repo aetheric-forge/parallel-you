@@ -209,3 +209,4 @@ __marimo__/
 # ignore worktree version directories
 v0.1/
 
+node_modules/

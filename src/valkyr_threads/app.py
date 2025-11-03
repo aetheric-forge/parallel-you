@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Optional
 from textual.app import App, ComposeResult
 from textual.widgets import Header, Footer, Static, Input, DataTable
+from textual.screen import Screen
 from textual.containers import Horizontal, Vertical
 from textual import on
 from textual.message import Message
@@ -12,6 +13,7 @@ from textual.reactive import reactive
 from .model import Thread, ThreadState
 from .storage import load_workspace, save_workspace
 from .scheduler import Scheduler, WipLimitError
+from .prompt import PromptScreen
 
 YAML_PATH = Path("threads.yaml")
 
@@ -49,7 +51,7 @@ class DetailView(Static):
 [#] {t.title}
 [bold]id:[/bold] {t.id}  [bold]state:[/bold] {t.state.value}  [bold]prio:[/bold] {t.priority}\n
 [bold]quantum:[/bold]  [bold]energy:[/bold] {t.energy_band.value} \n
-[bold]next_3:[bold]\n- + "\n- ".join(t.next_3 or ["<none>"]) + "\n" + \
+[bold]next_3:[bold]\n- {"  \n-".join(t.next_3 or ['<none>'])} \n 
         {f"\n[bold]tls:[/bold] {t.tls}\n" if t.tls else ""}
         """
         self.update(md)
@@ -65,7 +67,7 @@ class ParalellYou(App):
     BINDINGS = [
         ("q", "quit", "Quit"),
         ("s", "start", "Start"),
-        ("y", "yield", "Yield"),
+        ("y", "yield_", "Yield"),
         ("p", "park", "Park"),
         ("d", "done", "Done"),
         ("r", "ready", "Ready"),
@@ -99,6 +101,8 @@ class ParalellYou(App):
 
     def _select_current(self) -> None:
         tid = self._current_row_id()
+        if not tid:
+            return
         self.detail.thread = self.ws.get(tid)
 
     
@@ -114,25 +118,13 @@ class ParalellYou(App):
             self.sched.start(tid)
         except WipLimitError as ex:
             self.bell()
-            self.status.update(str(ex)) if hasattr("self", "status") else None
         self.refresh_data()
 
     def action_park(self) -> None:
         self._set_state(ThreadState.PARKED)
 
     def action_done(self) -> None:
-        self._set_state()
-
-    def action_yield(self) -> None:
-        tid = self._current_row_id()
-        if not tid:
-            return
-
-        # quick prompt for next hint
-        def _cb(value: str) -> None:
-            self.sched.yield_(tid, next_hint=value or None)
-            self.refresh_data()
-        self.push_screen(_Prompt("Next hint:"), _cb)
+        self._set_state(ThreadState.DONE)
 
     def action_ready(self) -> None:
         self._set_state(ThreadState.READY)
@@ -145,42 +137,38 @@ class ParalellYou(App):
         self.refresh_data()
 
     def action_new(self) -> None:
-        def _cb(value: str) -> None:
-            if not value:
-                return
-            ws = load_workspace(YAML_PATH)
-            ws.threads.append(
-                Thread(id=value.strip(), title=value.strip())
-            )
-            save_workspace(YAML_PATH, ws)
-            self.refresh_data()
-        self.push_screen(_Prompt("New thread id:"), _cb)
+        self.push_screen(PromptScreen("New thread id:"), callback=lambda dism: self._handle_prompt("new", dism))
+
+    def action_yield_(self) -> None:
+        if not self._current_row_id():
+            return
+        self.push_screen(PromptScreen("Next hint:"), callback=lambda dism: self._handle_prompt("yield", dism))
 
     def action_filter(self) -> None:
-        def _cb(value: str) -> None:
+        self.push_screen(PromptScreen("Filter:"), callback=lambda dism: self._handle_prompt("filter", dism))
+
+    def _handle_prompt(self, kind: str, value: str | None) -> None:
+        if kind == "new":
+            if value:
+                ws = load_workspace(YAML_PATH)
+                ws.threads.append(Thread(id=value, title=value))
+                save_workspace(YAML_PATH, ws)
+                self.refresh_data()
+        elif kind == "yield":
+            tid = self._current_row_id()
+            if tid:
+                self.sched.yield_(tid, next_hint=value or None)
+                self.refresh_data()
+        elif kind == "filter":
             patt = (value or "").lower()
             items = [t for t in self.ws.threads if patt in t.id.lower() or patt in t.title.lower()]
             self.table.load(items)
-            self._select_current()
-        self.push_screen(_Prompt("Filter:"), _cb)
+            self.refresh_data()
 
-class _Prompt(Static):
-    def __init__(self, label: str):
-        super().__init__()
-        self.label = label
-
-    def compose(self) -> ComposeResult:
-        yield Vertical(
-            Static(self.label),
-            Input(placeholder="type here and press Enter"),
-        )
-
-    @on(Input.Submitted)
-    def _on_submit(self, event: Input.Submitted) -> None:
-        self.remove()
 
 def run() -> None:
     ParalellYou().run()
 
 if __name__ == "__main__":
     run()
+

@@ -17,7 +17,6 @@ class Scheduler:
     def save(self) -> None:
         save_workspace(self.path, self.ws)
 
-
     def set_state(self, thread_id: str, state: ThreadState) -> Thread:
         t = self.ws.get(thread_id)
         if not t:
@@ -35,12 +34,21 @@ class Scheduler:
         t = self.ws.get(thread_id)
         if not t:
             raise KeyError(thread_id)
+        if t.tls is None:
+            t.tls = f"notes/{t.id}-context.md"
+            # ensure it persists for next run
+            self.save()       
         if next_hint and t.tls:
+            hint = next_hint.strip()
+            if hint:
+                existing = [x for x in (t.next_3 or []) if x.strip().lower() != hint.lower()]
+                t.next_3 = [hint] + existing[:2]
             ts = datetime.now().isoformat(timespec="seconds")
-        p = Path(t.tls)
-        p.parent.mkdir(parents=True, exist_ok=True)
-        with p.open("a") as fh:
-            fh.write(f"\n— yield @ {ts}\nnext_hint: {next_hint}\n")
+            tls: str = t.tls
+            p = Path(tls)
+            p.parent.mkdir(parents=True, exist_ok=True)
+            with p.open("a") as fh:
+                fh.write(f"\n— yield @ {ts}\nnext_hint: {hint}\n")
         t.state = ThreadState.READY
         self.save()
         return t

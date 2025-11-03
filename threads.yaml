@@ -1,14 +1,12 @@
 wip_limit: 3
 default_quantum: 50m
-
-
 threads:
 - id: baator-dice-refactor
   title: DiceService detangling + contract
-  state: Ready # Backlog | Ready | Running | Blocked | Parked | Done
-  priority: 1 # 1 = hottest
+  state: Ready
+  priority: 1
   quantum: 60m
-  energy_band: Deep # Deep | Medium | Light
+  energy_band: Deep
   next_3:
   - extract DTOs and freeze contract
   - kill circular dep between Service <-> Bus
@@ -16,8 +14,6 @@ threads:
   tls: notes/baator-dice-context.md
   deps: []
   blockers: []
-
-
 - id: heretical-patterns
   title: Heretical Design Pattern Book skeleton
   state: Ready
@@ -26,8 +22,19 @@ threads:
   energy_band: Medium
   next_3:
   - outline TOC
-  - draft “Infield Fly Anti-Exploit” chapter
+  - "draft \u201CInfield Fly Anti-Exploit\u201D chapter"
   - pick citation style
   tls: notes/patterns-context.md
+  deps: []
+  blockers: []
+- id: weave-consolidation-protocol
+  title: weave-consolidation-protocol
+  state: Ready
+  priority: 3
+  quantum: 50m
+  energy_band: Medium
+  next_3:
+  - start developing characters
+  tls: notes/weave-consolidation-protocol-context.md
   deps: []
   blockers: []

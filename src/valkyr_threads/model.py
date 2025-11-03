@@ -39,13 +39,9 @@ class Workspace:
     default_quantum: str = "50m"
     threads: List[Thread] = field(default_factory=list)
 
+    def running_count(self) -> int:
+        return sum(1 for t in self.threads if t.state == ThreadState.RUNNING)
+
+
     def get(self, thread_id: str) -> Optional[Thread]:
         return next((t for t in self.threads if t.id == thread_id), None)
-
-
-def running_count(self) -> int:
-    return sum(1 for t in self.threads if t.state == ThreadState.RUNNING)
-
-
-def get(self, thread_id: str) -> Optional[Thread]:
-    return next((t for t in self.threads if t.id == thread_id), None)

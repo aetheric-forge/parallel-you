@@ -10,10 +10,11 @@ from textual import on
 from textual.message import Message
 from textual.reactive import reactive
 
-from .model import Thread, ThreadState
+from .model import Thread, ThreadState, EnergyBand
 from .storage import load_workspace, save_workspace
 from .scheduler import Scheduler, WipLimitError
 from .prompt import PromptScreen
+from .edit_screen import EditThreadScreen
 
 YAML_PATH = Path("threads.yaml")
 
@@ -50,7 +51,7 @@ class DetailView(Static):
         md = f"""
 [#] {t.title}
 [bold]id:[/bold] {t.id}  [bold]state:[/bold] {t.state.value}  [bold]prio:[/bold] {t.priority}\n
-[bold]quantum:[/bold]  [bold]energy:[/bold] {t.energy_band.value} \n
+[bold]quantum:[/bold]  {t.quantum} [bold]energy:[/bold] {t.energy_band.value} \n
 [bold]next_3:[bold]\n- {"  \n-".join(t.next_3 or ['<none>'])} \n 
         {f"\n[bold]tls:[/bold] {t.tls}\n" if t.tls else ""}
         """
@@ -72,6 +73,8 @@ class ParalellYou(App):
         ("d", "done", "Done"),
         ("r", "ready", "Ready"),
         ("n", "new", "New"),
+        ("/", "filter", "Filter"),
+        ("E", "edit_details", "Edit details"),
     ]
 
     def compose(self) -> ComposeResult:
@@ -146,6 +149,69 @@ class ParalellYou(App):
 
     def action_filter(self) -> None:
         self.push_screen(PromptScreen("Filter:"), callback=lambda dism: self._handle_prompt("filter", dism))
+
+    def action_edit_details(self) -> None:
+        tid = self._current_row_id()
+        if not tid:
+            return
+        t = self.ws.get(tid)
+        if not t:
+            return
+        self.push_screen(
+            EditThreadScreen(t),
+            callback=lambda dism: self._apply_edit_details(tid, dism),
+        )
+
+    def _apply_edit_details(self, tid: str, data: dict | None) -> None:
+        if not data:
+            return
+        ws = load_workspace(YAML_PATH)
+        t = ws.get(tid)
+        if not t:
+            return
+        
+        # Title
+        t.title = (data.get("title") or t.title).strip()
+
+        # Priority (coerce int safely)
+        pr = data.get("priority")
+        try:
+            if pr is not None and str(pr).strip() != "":
+                t.priority = int(str(pr).strip())
+        except ValueError as e:
+            pass # ignore bad input
+
+        # Quantum (keep string format like "50m")
+        qv = data.get("quantum")
+        if qv is not None and str(qv).strip() != "":
+            t.quantum = str(qv).strip()
+        
+        # Energy Band / State (case-insensitive)
+        eb = (data.get("energy_band") or t.energy_band.value).strip()
+        st = (data.get("state") or t.state.value).strip()
+        try:
+            t.energy_band = EnergyBand(eb)
+        except Exception:
+            # try casefold lookup
+            m = {e.value.lower(): e for e in EnergyBand}
+            if eb.lower() in m:
+                t.energy_band = m[eb.lower()]
+
+        try:
+            t.state = ThreadState(st)
+        except Exception:
+            m = {s.value.lower(): s for s in ThreadState}
+            if st.lower() in m:
+                t.state = m[st.lower()]
+
+        # TLS
+        raw_tls = data.get("tls")
+        if raw_tls is not None:
+            tlss = str(raw_tls).strip()
+            t.tls = tlss or None
+        
+        save_workspace(YAML_PATH, ws)
+        self.refresh_data()
 
     def _handle_prompt(self, kind: str, value: str | None) -> None:
         if kind == "new":

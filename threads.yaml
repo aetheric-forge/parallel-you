@@ -28,11 +28,11 @@ threads:
   deps: []
   blockers: []
 - id: weave-consolidation-protocol
-  title: weave-consolidation-protocol
+  title: The Weave Consolidation Protocol
   state: Ready
-  priority: 3
-  quantum: 50m
-  energy_band: Medium
+  priority: 5
+  quantum: 90m
+  energy_band: Deep
   next_3:
   - start developing characters
   tls: notes/weave-consolidation-protocol-context.md

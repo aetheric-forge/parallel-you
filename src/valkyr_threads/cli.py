@@ -1,26 +1,90 @@
+# src/valkyr_threads/cli.py
 from __future__ import annotations
+import os
 from pathlib import Path
+from typing import Optional, Dict, Any
 import typer
-from valkyr_threads.scheduler import Scheduler
-from valkyr_threads.model import ThreadState
+from .storage.repo_factory import make_repo
+from .scheduler import Scheduler
+from .model import ThreadState, EnergyBand
+from .sort_filter import FilterSpec, apply_filters, sort_threads
 
-app = typer.Typer(add_completion=False)
-YAML = Path("threads.yaml")
+app = typer.Typer(no_args_is_help=True)
 
-@app.command()
-def start(thread_id: str):
-    Scheduler(YAML).start(thread_id)
-    typer.echo(f"Started: {thread_id}")
+# ---- Root callback wires shared state into ctx.obj ---------------------------
+@app.callback()
+def main(
+    ctx: typer.Context,
+    repo: Optional[str] = typer.Option(None, help="storage backend: yaml|mongo (default: YAML)"),
+    yaml_path: Path = typer.Option(Path(os.getenv("WORKSPACE_YAML", "workspace.yaml")), help="YAML path"),
+    mongo_uri: Optional[str] = typer.Option(os.getenv("MONGO_URI"), help="Mongo URI"),
+    mongo_db: str = typer.Option("parallel_you", help="Mongo database"),
+):
+    # Build the repo once; share via ctx.obj for all subcommands
+    ctx.ensure_object(dict)
+    ctx.obj["repo"] = make_repo(
+        kind=repo,
+        yaml_path=str(yaml_path),
+        mongo_uri=mongo_uri,
+        mongo_db=mongo_db,
+    )
 
-@app.command(name="yield")
-def yield_(thread_id: str, next: str = typer.Option("", help="one-line next-hint")):
-    Scheduler(YAML).yield_(thread_id, next_hint=next or None)
-    typer.echo(f"Yielded: {thread_id}")
+# Small helper to get a Scheduler from ctx.obj
+def _sch(ctx: typer.Context) -> Scheduler:
+    return Scheduler(ctx.obj["repo"])
 
-@app.command()
-def set(thread_id: str, state: ThreadState):
-    Scheduler(YAML).set_state(thread_id, state)
-    typer.echo(f"{thread_id} -> {state.value}")
+# ---- Example commands using ctx.obj -----------------------------------------
+@app.command("ls")
+def ls_cmd(
+    ctx: typer.Context,
+    states: Optional[str] = typer.Option(None, help="CSV of states e.g. Ready,Running"),
+    energy: Optional[str] = typer.Option(None, help="CSV of energy e.g. Deep,Medium"),
+    min_prio: Optional[int] = typer.Option(None),
+    max_prio: Optional[int] = typer.Option(None),
+    text: Optional[str] = typer.Option(None),
+    include_archived: bool = typer.Option(False),
+    sort: str = typer.Option("created_at", help="created_at|priority|energy"),
+    asc: bool = typer.Option(False),
+):
+    sch = _sch(ctx)
+    def _states(s): 
+        return None if not s else [ThreadState(x.strip().title()) for x in s.split(",") if x.strip()]
+    def _energy(s):
+        return None if not s else [EnergyBand(x.strip().title()) for x in s.split(",") if x.strip()]
 
-def main() -> None:  # <-- entry point calls this
-    app()
+    spec = FilterSpec(
+        states=_states(states),
+        energy=_energy(energy),
+        min_priority=min_prio,
+        max_priority=max_prio,
+        text=text,
+        include_archived=include_archived,
+    )
+    items = sort_threads(
+        apply_filters(sch.ws.threads, spec),
+        key=sort,
+        reverse=(not asc if sort == "created_at" else False),
+    )
+    for t in items:
+        print(f"{t.id:>8}  [{t.state.value:<7}] p{t.priority} {t.energy_band.value:<6}  {t.created_at.isoformat()}  {t.title}")
+
+@app.command("archive")
+def archive_cmd(ctx: typer.Context, thread_id: str):
+    sch = _sch(ctx)
+    t = sch.repo.get(thread_id)
+    if not t:
+        typer.echo("thread not found"); raise typer.Exit(1)
+    t.archived = True
+    sch.repo.upsert(t)
+    typer.echo(f"archived {t.id}  {t.title}")
+
+@app.command("unarchive")
+def unarchive_cmd(ctx: typer.Context, thread_id: str):
+    sch = _sch(ctx)
+    t = sch.repo.get(thread_id)
+    if not t:
+        typer.echo("thread not found"); raise typer.Exit(1)
+    t.archived = False
+    sch.repo.upsert(t)
+    typer.echo(f"unarchived {t.id}  {t.title}")
+

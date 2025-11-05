@@ -5,7 +5,7 @@ from textual.screen import Screen
 from textual.containers import Vertical, Horizontal
 from textual.widgets import Static, Input, Select, Button
 
-from .model import Thread, ThreadState, EnergyBand
+from ..model import Thread, ThreadState, EnergyBand
 
 class EditThreadScreen(Screen[Optional[Dict[str, Any]]]):
     """
@@ -27,8 +27,8 @@ class EditThreadScreen(Screen[Optional[Dict[str, Any]]]):
         self._title: Input | None = None
         self._prio: Input | None = None
         self._quantum: Input | None = None
-        self._energy: Select[tuple[str, str]] | None = None
-        self._state: Select[tuple[str, str]] | None = None
+        self._energy: Select[str] | None = None
+        self._state: Select[str] | None = None
         self._tls: Input | None = None
 
     def compose(self) -> ComposeResult:

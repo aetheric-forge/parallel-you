@@ -1,5 +1,5 @@
 from __future__ import annotations
-from .model import Workspace, Thread, ThreadState, EnergyBand
+from ..model import Workspace, Thread, ThreadState, EnergyBand
 from pathlib import Path
 import yaml
 

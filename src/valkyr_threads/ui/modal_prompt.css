@@ -1,0 +1,22 @@
+/* backdrop fills the screen and dims; dialog floats above it */
+#backdrop {
+  layer: overlay;
+  dock: none;
+  background: black;
+  opacity: 0.6;         /* dim level; 0.0–1.0 */
+}
+
+/* the dialog card */
+#prompt-box {
+  layer: overlay;
+  align: center middle; /* center the dialog */
+  width: 60%;
+  max-width: 84;
+  padding: 1 2;
+  border: round #7aa2f7;
+  background: transparent;     /* <- the important part */
+}
+
+/* minor polish */
+#prompt-title { text-style: bold; }
+#prompt-input { width: 100%; }

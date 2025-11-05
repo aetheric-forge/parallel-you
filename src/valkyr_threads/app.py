@@ -68,12 +68,7 @@ class DetailView(Static):
         self.update(md)
 
 class ParallelYou(App):
-    CSS = """
-    Screen { layout: vertical; background: transparent; }
-    #body { layout: horizontal; background: transparent; }
-    ThreadsView { width: 60%; }
-    DetailView { width: 40%; border: round $accent; }
-    """
+    CSS_PATH = "app.css" 
 
     BINDINGS = [
         ("q", "quit", "Quit"),

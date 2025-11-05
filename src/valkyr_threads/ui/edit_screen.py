@@ -59,7 +59,7 @@ class EditThreadScreen(Screen[Optional[Dict[str, Any]]]):
             ),
             Horizontal(
                 Button("Cancel", id="cancel"),
-                Button("Save", variant="primary", id="save"),
+                Button("Save", "primary", id="save"),
                 id="buttons",
             ),
             id="box",

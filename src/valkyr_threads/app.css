@@ -1,0 +1,35 @@
+  /* --- Tokyo Night-ish palette --- */
+    $background: #1a1b26;   /* deep navy */
+    $surface:    #16161e;   /* panel, slightly darker */
+    $text:       #c0caf5;   /* foreground */
+    $muted:      #a9b1d6;   /* secondary */
+    $accent:     #7aa2f7;   /* blue */
+    $accent-2:   #bb9af7;   /* purple */
+    $ok:         #9ece6a;   /* green */
+    $warn:       #e0af68;   /* yellow */
+    $error:      #f7768e;   /* red */
+
+    /* Let terminal translucency show through: don't paint global bg */
+    Screen { color: $text; }   /* <- no solid fill */
+    Header, Footer { color: $muted; }
+
+    /* Panels: transparent-ish (no solid bg), keep borders */
+    #body { layout: horizontal; }
+    ThreadsView { width: 60%; }
+    DetailView {
+        width: 40%;
+        border: round $accent;
+    }
+
+    /* Prompt / edit screens: soft surfaces */
+    PromptScreen, EditThreadScreen {
+        align: center middle;
+        layer: overlay;
+    }
+    #prompt-box, #box {
+        width: 60%;
+        max-width: 84;
+        border: round $accent-2;
+        padding: 1 2;
+        background: $surface;  /* a touch of solid for readability */
+    }

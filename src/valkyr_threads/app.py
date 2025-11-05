@@ -1,5 +1,5 @@
 from __future__ import annotations
-import asyncio
+from logging import Filter
 from pathlib import Path
 from typing import Optional
 from textual.app import App, ComposeResult
@@ -10,14 +10,15 @@ from textual import on
 from textual.message import Message
 from textual.reactive import reactive
 
+from valkyr_threads.storage import repo
+
+from .ui.modal_prompt import ModalPrompt
 from .model import Thread, ThreadState, EnergyBand
-from .storage import load_workspace, save_workspace
 from .scheduler import Scheduler, WipLimitError
-from .prompt import PromptScreen
-from .edit_screen import EditThreadScreen
-
-YAML_PATH = Path("threads.yaml")
-
+from .ui.edit_screen import EditThreadScreen
+from .storage.repo_factory import make_repo
+from .storage.workspace import load_workspace, save_workspace
+from .sort_filter import FilterSpec, apply_filters, sort_threads
 
 class ThreadSelected:
     def __init__(self, thread: Thread):
@@ -25,9 +26,18 @@ class ThreadSelected:
         super().__init__()
 
 class ThreadsView(DataTable):
+    def __init__(self, selected_row_key: str | None = None):
+        super().__init__()
+        self.selected_row_key: str | None = selected_row_key
+        self.row: int | None = None
+
     def on_mount(self):
         self.cursor_type = "row"
-        self.add_columns("id", "state", "prio", "quantum", "title")
+        self.add_columns("id", "title", "state", "prio", "energy_band", "quantum")
+
+    @on(DataTable.RowSelected)
+    def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
+        self.selected_row_key = event.row_key.value
 
     def load(self, items: list[Thread]):
         self.clear()
@@ -35,11 +45,11 @@ class ThreadsView(DataTable):
             items, key=lambda x: (x.state != ThreadState.RUNNING, x.priority)
         ):
             self.add_row(
-                t.id, t.state.value, str(t.priority), t.quantum, t.title, key=t.id
+                t.id, t.title, t.state.value, str(t.priority), t.energy_band.value, t.quantum, key=t.id
             )
         if items:
             self.focus()
-            self.cursor_coordinate = (0, 0)  # type: ignore[attr-defined] # Injected by Textual at runtime, basedpyright can ignore
+            self.row = 0
 
 class DetailView(Static):
     thread: reactive[Optional[Thread]] = reactive(None)
@@ -57,10 +67,10 @@ class DetailView(Static):
         """
         self.update(md)
 
-class ParalellYou(App):
+class ParallelYou(App):
     CSS = """
-    Screen { layout: vertical; }
-    #body { layout: horizontal; }
+    Screen { layout: vertical; background: transparent; }
+    #body { layout: horizontal; background: transparent; }
     ThreadsView { width: 60%; }
     DetailView { width: 40%; border: round $accent; }
     """
@@ -87,14 +97,51 @@ class ParalellYou(App):
         yield Footer()
 
     def on_mount(self) -> None:
-        self.sched = Scheduler(YAML_PATH)
+        self.repo: repo.ThreadRepo = make_repo()
+        self.sched: Scheduler = Scheduler(self.repo)
+        self.table: ThreadsView = self.query_one(ThreadsView)
+        self.filter_spec: FilterSpec = FilterSpec()
+        self.sort_key: str = "created_at"
+        self.sort_asc: bool = False
         self.refresh_data()
 
+
     def refresh_data(self) -> None:
-        ws = load_workspace(YAML_PATH)
-        self.ws = ws
-        self.table.load(ws.threads)
-        self._select_current()
+        """Reload workspace and threads from the current repo (YAML or Mongo)."""
+        # Ask the repo for a fresh Workspace
+        self.sched.ws = self.sched.repo.load_workspace()
+
+        # Grab threads via repo abstraction
+        threads = list(self.sched.repo.list(include_archived=FilterSpec.include_archived))
+
+        # Apply current filters/sorters (if you’ve already added them)
+        try:
+            from .sort_filter import apply_filters, sort_threads
+            items = apply_filters(threads, self.filter_spec)
+            items = sort_threads(items, key=self.sort_key, reverse=not self.sort_asc)
+        except Exception:
+            # fallback if sort/filter not yet wired
+            items = threads
+
+        # Rebuild your DataTable or list
+        self.table.clear()
+        for t in items:
+            self.table.add_row(
+                t.id,
+                t.title,
+                t.state.value,
+                str(t.priority),
+                t.energy_band.value,
+                t.quantum,
+                key=t.id,
+            )
+
+        # Optional: maintain cursor if you had one selected
+        if hasattr(self.table, "selected_row_key") and self.table.selected_row_key:
+            try:
+                self.table.row = self.table.get_row_index(self.table.selected_row_key)
+            except Exception:
+                pass
 
     def _current_row_id(self) -> Optional[str]:
         if not self.table.row_count:
@@ -106,7 +153,7 @@ class ParalellYou(App):
         tid = self._current_row_id()
         if not tid:
             return
-        self.detail.thread = self.ws.get(tid)
+        self.detail.thread = self.sched.ws.get(tid)
 
     
     @on(ThreadsView.RowHighlighted)
@@ -140,21 +187,21 @@ class ParalellYou(App):
         self.refresh_data()
 
     def action_new(self) -> None:
-        self.push_screen(PromptScreen("New thread id:"), callback=lambda dism: self._handle_prompt("new", dism))
+        self.push_screen(ModalPrompt("New thread id:"), callback=lambda dism: self._handle_prompt("new", dism))
 
     def action_yield_(self) -> None:
         if not self._current_row_id():
             return
-        self.push_screen(PromptScreen("Next hint:"), callback=lambda dism: self._handle_prompt("yield", dism))
+        self.push_screen(ModalPrompt("Next hint:"), callback=lambda dism: self._handle_prompt("yield", dism))
 
     def action_filter(self) -> None:
-        self.push_screen(PromptScreen("Filter:"), callback=lambda dism: self._handle_prompt("filter", dism))
+        self.push_screen(ModalPrompt("Filter:"), callback=lambda dism: self._handle_prompt("filter", dism))
 
     def action_edit_details(self) -> None:
         tid = self._current_row_id()
         if not tid:
             return
-        t = self.ws.get(tid)
+        t = self.sched.ws.get(tid)
         if not t:
             return
         self.push_screen(
@@ -162,11 +209,20 @@ class ParalellYou(App):
             callback=lambda dism: self._apply_edit_details(tid, dism),
         )
 
+    async def action_add_hint(self) -> None:
+        tid = self._current_row_id()
+        if not tid:
+            return
+        t = self.sched.ws.get(tid)
+        if not t:
+            return
+        self.push_screen(ModalPrompt("Add hint:"), callback=lambda dism: self._handle_prompt("add_hint", dism))
+
     def _apply_edit_details(self, tid: str, data: dict | None) -> None:
         if not data:
             return
-        ws = load_workspace(YAML_PATH)
-        t = ws.get(tid)
+        self.sched.ws = self.repo.load_workspace()
+        t = self.sched.ws.get(tid)
         if not t:
             return
         
@@ -210,15 +266,15 @@ class ParalellYou(App):
             tlss = str(raw_tls).strip()
             t.tls = tlss or None
         
-        save_workspace(YAML_PATH, ws)
+        self.repo.save_workspace(self.sched.ws)
         self.refresh_data()
 
     def _handle_prompt(self, kind: str, value: str | None) -> None:
         if kind == "new":
             if value:
-                ws = load_workspace(YAML_PATH)
-                ws.threads.append(Thread(id=value, title=value))
-                save_workspace(YAML_PATH, ws)
+                self.sched.ws = self.repo.load_workspace()
+                self.sched.ws.threads.append(Thread(id=value, title=value))
+                self.repo.save_workspace(self.sched.ws)
                 self.refresh_data()
         elif kind == "yield":
             tid = self._current_row_id()
@@ -227,14 +283,13 @@ class ParalellYou(App):
                 self.refresh_data()
         elif kind == "filter":
             patt = (value or "").lower()
-            items = [t for t in self.ws.threads if patt in t.id.lower() or patt in t.title.lower()]
+            items = [t for t in self.sched.ws.threads if patt in t.id.lower() or patt in t.title.lower()]
             self.table.load(items)
             self.refresh_data()
 
 
 def run() -> None:
-    ParalellYou().run()
+    ParallelYou().run()
 
 if __name__ == "__main__":
     run()
-

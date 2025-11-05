@@ -1,5 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
+from datetime import datetime
 from enum import Enum
 from typing import List, Optional
 
@@ -31,6 +32,9 @@ class Thread:
     tls: Optional[str] = None
     deps: List[str] = field(default_factory=list)
     blockers: List[str] = field(default_factory=list)
+    archived: bool = False
+    created_at: datetime = field(default_factory=datetime.now)
+    updated_at: datetime = field(default_factory=datetime.now)
 
 
 @dataclass

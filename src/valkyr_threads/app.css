@@ -1,35 +1,29 @@
-  /* --- Tokyo Night-ish palette --- */
-    $background: #1a1b26;   /* deep navy */
-    $surface:    #16161e;   /* panel, slightly darker */
-    $text:       #c0caf5;   /* foreground */
-    $muted:      #a9b1d6;   /* secondary */
-    $accent:     #7aa2f7;   /* blue */
-    $accent-2:   #bb9af7;   /* purple */
-    $ok:         #9ece6a;   /* green */
-    $warn:       #e0af68;   /* yellow */
-    $error:      #f7768e;   /* red */
+  /* app.css — readable on dark *and* light backgrounds */
+ThreadsView {
+    border: round $accent;
+    min-width: 40;
+    padding: 0 1;
+    width: 3fr;
+    height: 1fr;
+    text-wrap: nowrap;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
 
-    /* Let terminal translucency show through: don't paint global bg */
-    Screen { color: $text; }   /* <- no solid fill */
-    Header, Footer { color: $muted; }
+DetailView {
+    width: 2fr;
+    min-width: 30;
+    height: 1fr;
+    border: round $secondary;
+    padding: 1 1;
+    text-wrap: wrap;
+}
 
-    /* Panels: transparent-ish (no solid bg), keep borders */
-    #body { layout: horizontal; }
-    ThreadsView { width: 60%; }
-    DetailView {
-        width: 40%;
-        border: round $accent;
-    }
+/* Let Rich colors through: DO NOT set color or text-style on cells/rows */
+ThreadsView .datatable--header { text-style: bold; }
 
-    /* Prompt / edit screens: soft surfaces */
-    PromptScreen, EditThreadScreen {
-        align: center middle;
-        layer: overlay;
-    }
-    #prompt-box, #box {
-        width: 60%;
-        max-width: 84;
-        border: round $accent-2;
-        padding: 1 2;
-        background: $surface;  /* a touch of solid for readability */
-    }
+/* Cursor highlight that preserves foreground colors */
+ThreadsView .datatable--cursor { background: $boost;   /* soft bg only */ }
+
+/* Optional zebra without touching fg color */
+ThreadsView .datatable--row:even { background: $panel; }

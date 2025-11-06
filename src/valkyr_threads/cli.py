@@ -8,6 +8,7 @@ from .storage.repo_factory import make_repo
 from .scheduler import Scheduler
 from .model import ThreadState, EnergyBand
 from .sort_filter import FilterSpec, apply_filters, sort_threads
+from valkyr_threads.storage import repo_factory
 
 app = typer.Typer(no_args_is_help=True)
 
@@ -91,12 +92,12 @@ def unarchive_cmd(ctx: typer.Context, thread_id: str):
 @app.command("import-yaml")
 def import_yaml(
     ctx: typer.Context,
-    yaml_path: Path = typer.Option(Path("workspace.yaml"))
+    yaml_path: str = typer.Option("workspace.yaml")
 ):
-    from .storage.workspace import load_workspace
     from .storage.repo_mongo import _to_doc  # safe even if YAML repo chosen
     sch = _sch(ctx)
-    ws = load_workspace(yaml_path)
+    repo = make_repo(kind="yaml", yaml_path=yaml_path)
+    ws = sch.repo.load_workspace()
     # save workspace
     sch.repo.save_workspace(ws)
     # seed threads

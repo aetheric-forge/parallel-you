@@ -2,7 +2,6 @@ from __future__ import annotations
 from datetime import datetime
 from pathlib import Path
 from .model import Workspace, ThreadState, Thread
-from .storage.workspace import load_workspace, save_workspace
 from .storage.repo import ThreadRepo
 
 

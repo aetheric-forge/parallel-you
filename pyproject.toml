@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "parallel-you"
-version = "0.1.0"
+version = "0.2.0"
 description = "YAML-backed personal thread scheduler with a Textual TUI"
 authors = [{ name = "Valkyr" }]
 readme = "README.md"
@@ -18,7 +18,7 @@ dependencies = [
 ]
 
 [project.entry-points."console_scripts"]
-vy = "valkyr_threads.cli:app"
+vy-cli = "valkyr_threads.cli:main"
 vy-tui = "valkyr_threads.app:run"
 
 

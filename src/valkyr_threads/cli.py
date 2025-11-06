@@ -8,12 +8,13 @@ from .storage.repo_factory import make_repo
 from .scheduler import Scheduler
 from .model import ThreadState, EnergyBand
 from .sort_filter import FilterSpec, apply_filters, sort_threads
+from valkyr_threads.storage import repo_factory
 
 app = typer.Typer(no_args_is_help=True)
 
 # ---- Root callback wires shared state into ctx.obj ---------------------------
 @app.callback()
-def main(
+def callback(
     ctx: typer.Context,
     repo: Optional[str] = typer.Option(None, help="storage backend: yaml|mongo (default: YAML)"),
     yaml_path: Path = typer.Option(Path(os.getenv("WORKSPACE_YAML", "workspace.yaml")), help="YAML path"),
@@ -88,3 +89,24 @@ def unarchive_cmd(ctx: typer.Context, thread_id: str):
     sch.repo.upsert(t)
     typer.echo(f"unarchived {t.id}  {t.title}")
 
+@app.command("import-yaml")
+def import_yaml(
+    ctx: typer.Context,
+    yaml_path: str = typer.Option("workspace.yaml")
+):
+    from .storage.repo_mongo import _to_doc  # safe even if YAML repo chosen
+    sch = _sch(ctx)
+    repo = make_repo(kind="yaml", yaml_path=yaml_path)
+    ws = sch.repo.load_workspace()
+    # save workspace
+    sch.repo.save_workspace(ws)
+    # seed threads
+    for t in ws.threads:
+        sch.repo.upsert(t)
+    typer.echo(f"Imported {len(ws.threads)} threads from {yaml_path}")
+
+def build_app() -> typer.Typer:
+    return app
+
+def main() -> None:
+    build_app()()

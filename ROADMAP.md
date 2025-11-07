@@ -2,10 +2,7 @@
 
 ## Vision
 
-A thought-organizer based on the idea of multi-threading. Opinionated limited hierarchy that fits well
-with Agile software methodology: Saga -> Epic -> Story; Sprint will encompass multiple stories as per process. Allow for collaboration
-by providing basic IAM and RBAC, allow assignments of team meembers to each level of the organization. Also broadcast events across
-multiple interfaces.
+A thought-organizer based on the idea of multi-threading. Opinionated limited hierarchy that fits well with Agile software methodology: Saga -> Epic -> Story; Sprint will encompass multiple stories as per process. Allow for collaboration by providing basic IAM and RBAC, allow assignments of team members to each level of the organization. Also broadcast events across multiple interfaces.
 
 ## Principles
 

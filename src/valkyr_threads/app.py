@@ -337,7 +337,7 @@ class ParallelYou(App):
                 self.sched.ws = self.repo.load_workspace()
                 t = Thread(id=value, title=value)
                 self.repo.upsert(t)
-                self.sched.ws.threads.append(t)
+                # we do not have to append to the workspace thread array; it has already been added after refresh following upsert
                 self.repo.save_workspace(self.sched.ws)
                 self.refresh_data()
         elif kind == "yield":

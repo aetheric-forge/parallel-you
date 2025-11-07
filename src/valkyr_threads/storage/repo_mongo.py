@@ -1,6 +1,6 @@
 # src/valkyr_threads/repo_mongo.py
 from __future__ import annotations
-from datetime import datetime
+from datetime import date, datetime
 from typing import Iterable, Optional
 from pymongo import MongoClient, ReturnDocument
 from ..model import Workspace, Thread, ThreadState, EnergyBand
@@ -37,6 +37,7 @@ def _from_doc(d: dict) -> Thread:
         created_at=d["created_at"],
         updated_at=d["updated_at"],
         archived=bool(d.get("archived", False)),
+        archived_at=d.get("archived_at", None),
     )
 
 class MongoThreadRepo:
@@ -66,9 +67,12 @@ class MongoThreadRepo:
         )
 
     def archive(self, thread_id: str, archived: bool = True) -> None:
+        archived_at: datetime | None = None
+        if archived:
+            archived_at = datetime.now().replace(microsecond=0)
         self.c_threads.update_one(
             {"_id": thread_id},
-            {"$set": {"archived": archived, "updated_at": datetime.now().replace(microsecond=0)}}
+            {"$set": {"archived": archived, "archived_at": archived_at}}
         )
 
     def save_workspace(self, ws: Workspace) -> None:

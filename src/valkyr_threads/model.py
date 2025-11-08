@@ -35,7 +35,7 @@ class Thread:
     archived: bool = False
     created_at: datetime = field(default_factory=datetime.now)
     updated_at: datetime = field(default_factory=datetime.now)
-
+    archived_at: datetime | None = field(default_factory=datetime.now)
 
 @dataclass
 class Workspace:

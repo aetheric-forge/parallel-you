@@ -90,8 +90,8 @@ class ThreadsView(DataTable):
         self.refresh_rows()
 
     def _title_cell(self, t: Thread) -> Text:
-        icon = STATE_ICON[t.state.name]
-        icon_style = STATE_COLOR.get(t.state.name, "yellow3")
+        icon = STATE_ICON["ARCHIVED"] if t.archived else STATE_ICON[t.state.name]
+        icon_style = STATE_COLOR["ARCHIVED"] if t.archived else STATE_COLOR.get(t.state.name, "yellow3")
         title_style = ENERGY_STYLE[t.energy_band.name]
         return Text.assemble((icon + " ", icon_style), (t.title, title_style))
     
@@ -173,11 +173,14 @@ class ParallelYou(App):
     BINDINGS = [
         ("q", "quit", "Quit"),
         ("s", "start", "Start"),
-        ("y", "yield_", "Yield"),
+        ("y", "yield", "Yield"),
         ("p", "park", "Park"),
         ("d", "done", "Done"),
         ("r", "ready", "Ready"),
         ("n", "new", "New"),
+        ("a", "archive", "Archive"),
+        ("u", "unarchive", "Unarchive"),
+        ("A", "toggle_archive", "Toggle archive view"),
         ("/", "filter", "Filter"),
         ("E", "edit_details", "Edit details"),
     ]
@@ -250,7 +253,7 @@ class ParallelYou(App):
     def action_new(self) -> None:
         self.push_screen(ModalPrompt("New thread id:"), callback=lambda dism: self._handle_prompt("new", dism))
 
-    def action_yield_(self) -> None:
+    def action_yield(self) -> None:
         if not self.table.selected_row_key:
             return
         self.push_screen(ModalPrompt("Next hint:"), callback=lambda dism: self._handle_prompt("yield", dism))
@@ -269,15 +272,6 @@ class ParallelYou(App):
             EditThreadScreen(t),
             callback=lambda dism: self._apply_edit_details(tid, dism),
         )
-
-    async def action_add_hint(self) -> None:
-        tid = self.table.selected_row_key
-        if not tid:
-            return
-        t = self.sched.ws.get(tid)
-        if not t:
-            return
-        self.push_screen(ModalPrompt("Add hint:"), callback=lambda dism: self._handle_prompt("add_hint", dism))
 
     def _apply_edit_details(self, tid: str, data: dict | None) -> None:
         if not data:
@@ -337,21 +331,37 @@ class ParallelYou(App):
                 self.sched.ws = self.repo.load_workspace()
                 t = Thread(id=value, title=value)
                 self.repo.upsert(t)
-                self.sched.ws.threads.append(t)
+                # we do not have to append to the workspace thread array; it has already been added after refresh following upsert
                 self.repo.save_workspace(self.sched.ws)
                 self.refresh_data()
         elif kind == "yield":
             tid = self.table.selected_row_key
             if tid:
-                self.sched.yield_(tid, next_hint=value or None)
                 t = self.repo.get(tid)
                 if t:
                     self.repo.upsert(t)
+                self.sched.yield_(tid, next_hint=value or None)
                 self.refresh_data()
         elif kind == "filter":
             patt = (value or "").lower()
             self.filter_spec = FilterSpec(text=patt)
             self.refresh_data()
+
+    def action_archive(self) -> None:
+        tid = self.table.selected_row_key
+        if tid:
+            self.repo.archive(tid)
+        self.refresh_data()
+
+    def action_unarchive(self) -> None:
+        tid = self.table.selected_row_key
+        if tid:
+            self.repo.archive(tid, False)
+        self.refresh_data()
+
+    def action_toggle_archive(self, on: bool | None = None) -> None:
+        self.filter_spec.include_archived = (not self.filter_spec.include_archived) if on is None else on
+        self.refresh_data()
 
     @on(ThreadSelected)
     def on_thread_selected(self, msg: ThreadSelected) -> None:

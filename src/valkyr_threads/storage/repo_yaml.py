@@ -1,4 +1,5 @@
 from __future__ import annotations
+from datetime import datetime
 from pathlib import Path
 from typing import Iterable, Optional
 from .repo import ThreadRepo
@@ -27,6 +28,10 @@ def _load_workspace(path: Path) -> Workspace:
             tls=t.get("tls"),
             deps=list(t.get("deps", []) or []),
             blockers=list(t.get("blockers", []) or []),
+            created_at=t.get("created_at"),
+            updated_at=t.get("updated_at"),
+            archived=t.get("archived"),
+            archived_at=t.get("archived_at"),
         )
     )
     return ws
@@ -47,6 +52,10 @@ def _save_workspace(path: Path, ws: Workspace) -> None:
                 "tls": t.tls,
                 "deps": t.deps,
                 "blockers": t.blockers,
+                "created_at": t.created_at,
+                "updated_at": t.updated_at,
+                "archived": t.archived,
+                "archived_at": t.archived_at,
             }
             for t in ws.threads
         ],
@@ -78,10 +87,14 @@ class YamlThreadRepo(ThreadRepo):
         self._save()
 
     def archive(self, thread_id: str, archived: bool = True) -> None:
+        archived_at: datetime | None = None
+        if archived:
+            archived_at = datetime.now().replace(microsecond=0)        
         t = self.ws.get(thread_id)
         if not t:
             return
         t.archived = archived
+        t.archived_at = archived_at if t.archived else None
         self._save()
 
     def save_workspace(self, ws: Workspace) -> None:

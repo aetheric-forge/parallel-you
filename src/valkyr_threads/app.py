@@ -214,9 +214,7 @@ class ParallelYou(App):
         # fetch live threads from backend
         threads = list(self.sched.repo.list(include_archived=self.filter_spec.include_archived))
 
-        items = sort_threads(apply_filters(threads, self.filter_spec),
-                            key=self.sort_key,
-                            reverse=(not self.sort_asc if self.sort_key == "created_at" else False))
+        items = sort_threads(apply_filters(threads, self.filter_spec))
 
         self.table.clear()
         self.table.set_threads(items)

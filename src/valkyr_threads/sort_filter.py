@@ -3,7 +3,8 @@ from dataclasses import dataclass
 from typing import Iterable, List, Optional, Sequence
 from .model import Thread, ThreadState, EnergyBand
 
-_ENERGY_ORDER = {EnergyBand.DEEP: 0, EnergyBand.MEDIUM: 1, EnergyBand.LIGHT: 2}
+_ENERGY_ORDER = {EnergyBand.LIGHT: 0, EnergyBand.MEDIUM: 1, EnergyBand.DEEP: 2}
+_STATE_ORDER = {"Running": 0, "Ready": 1, "Parked": 2, "Done": 3}
 
 @dataclass
 class FilterSpec:
@@ -33,13 +34,12 @@ def apply_filters(items: Iterable[Thread], spec: FilterSpec) -> List[Thread]:
         out.append(t)
     return out
 
-def sort_threads(items: Iterable[Thread], key: str = "created_at", reverse: bool = True) -> List[Thread]:
-    """Sort threads: reverse by created_at by default; then priority asc; then energy order; then title."""
+def sort_threads(items: Iterable[Thread], reverse: bool = False) -> List[Thread]:
     def _key(t: Thread):
         return (
-            getattr(t, key, t.created_at),
+            _STATE_ORDER.get(t.state, 99),
             t.priority,
             _ENERGY_ORDER.get(t.energy_band, 99),
-            t.title.lower(),
+            t.created_at,
         )
     return sorted(list(items), key=_key, reverse=reverse)

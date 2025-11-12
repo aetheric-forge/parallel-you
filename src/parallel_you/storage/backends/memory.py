@@ -4,6 +4,7 @@ from filter_spec import FilterSpec
 from util import gen_id
 from datetime import datetime
 import re
+import copy
 
 class MemoryRepo(Repo):
     _threads: dict[str, Thread]
@@ -20,31 +21,54 @@ class MemoryRepo(Repo):
                 continue
             if spec.types and not isinstance(v, tuple(spec.types)):
                 continue
-            result.append(v)
+            result.append(copy.deepcopy(v))
         return result
 
     def get(self, id: str) -> Thread | None:
-        return self._threads.get(id, None)
+        obj = self._threads.get(id, None)
+        return copy.deepcopy(obj) if obj else None
 
     def upsert(self, t: Thread) -> str:
-        if not getattr(t, "id", None):
-            t.id = gen_id()
-        thread = self._threads.get(t.id, None)
-        if thread is None:
-            thread = t
+        incoming = copy.deepcopy(t)
+
+        if not getattr(incoming, "id", None):
+            incoming.id = gen_id()
+
         now = datetime.now().replace(second=0, microsecond=0)
-        thread.created_at = now if not thread.created_at else thread.created_at
-        thread.updated_at = now
-        for f in ["id", "title", "priority", "quantum", "archived", "archived_at"]:
-            v = getattr(t, f)
-            setattr(thread, f, v)
-        self._threads[t.id] = thread
-        return thread.id
+        existing = self._threads.get(incoming.id)
 
-    def delete(self, id: str) -> None:
-        t = self._threads.get("id", id)
-        if t is not None:
-            del self._threads[t.id]
+        # choose target object to mutate
+        if existing is None:
+            stored = copy.deepcopy(incoming)
+            # first write: set created_at if missing
+            stored.created_at = incoming.created_at or now
+        else:
+            stored = copy.deepcopy(existing)
 
+            # copy mutable fields from incoming (do NOT copy archived_at here)
+            stored.title = incoming.title
+            stored.priority = incoming.priority
+            stored.quantum = incoming.quantum
+            stored.archived = incoming.archived
+
+        prev_arch = bool(getattr(existing, "archived", False)) if existing else False
+        new_arch = bool(stored.archived)
+
+        # archived_at transitions
+        if not prev_arch and new_arch:
+            stored.archived_at = now           # just archived
+        elif prev_arch and not new_arch:
+            stored.archived_at = None          # just unarchived
+        # else: leave archived_at as-is
+
+        # timestamps
+        stored.updated_at = now
+
+        self._threads[t.id] = stored
+        return stored.id
+
+    def delete(self, id: str) -> bool:
+        return self._threads.pop(id, None) is not None
+       
     def clear(self) -> None:
         self._threads.clear()

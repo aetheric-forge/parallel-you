@@ -7,12 +7,15 @@ from textual.widget import Widget
 from rich.text import Text
 from textual.reactive import reactive
 from textual import events, on
+
 from filter_spec import FilterSpec
+from util import slugify
+
 from parallel_you.messages.thread_tab.thread_tree import ThreadSelected
 from parallel_you.messages.app import RequestRefresh
 from parallel_you.model import Saga, Story, Thread
-from parallel_you.ui.screens.thread_tab import EditSagaModal, EditStoryModal
 from parallel_you.messages.thread_tab import SagaCreated, SagaUpdated, EditSagaCancelled, ApplyFilter, ThreadSelected, StoryCreated, StoryUpdated
+from parallel_you.ui import InlineInput
 
 SAGA_GLYPH  = "⚙"
 STORY_GLYPH = "✦"
@@ -87,28 +90,32 @@ class ThreadTree(Widget):
             node.collapse()
 
     def action_add_saga(self) -> None:
-        self.run_worker(self._add_saga_flow(), exclusive=True)
-
-    async def _add_saga_flow(self):
-        saga = Saga(id=None, title="Test Saga")
-        saga = await self.app.push_screen_wait(EditSagaModal(saga))
-        if saga is not None:
-            self.post_message(SagaCreated(saga))
+        w = InlineInput(
+            model_factory=lambda title, _: Saga(id=slugify(title), title=title),
+            message_class=SagaCreated, 
+            placeholder="Saga title...",
+            validator=lambda t: (bool(t), "Title cannot be empty"),
+        )
+        
+        # mount near the focused node (or use CSS to position)
+        self.mount(w, after=self._tree)
 
     def action_add_story(self) -> None:
-        self.run_worker(self._add_story_flow(), exclusive=True)
-
-    async def _add_story_flow(self):
         curr = self._tree.cursor_node
         if not isinstance(curr.data, Ref):
             return
-        thread = self._repo.get(curr.data.id)
-        if not isinstance(thread, Saga):
+        if self._repo.get(curr.data.id) is None:
             return
-        story = Story("test-story", thread.id, "Test Story")
-        story = await self.app.push_screen_wait(EditStoryModal(story)) 
-        if story is not None:
-            self.post_message(StoryCreated(story))
+
+        w = InlineInput(
+            parent_id=curr.data.id,
+            model_factory=lambda t, pid: Story(id=slugify(t), title=t, saga_id=pid),
+            message_class=StoryCreated,
+            placeholder="Story title...",
+            validator=lambda t: (bool(t), "Title cannot be empty"),
+        )
+
+        self.mount(w, after=self._tree)
 
     def _label(self, obj: Thread) -> Text:
         glyph = SAGA_GLYPH if isinstance(obj, Saga) else (STORY_GLYPH if isinstance(obj, Story) else THREAD_GLYPH)
@@ -161,6 +168,3 @@ class ThreadTree(Widget):
     def on_tree_node_highlighted(self, event: Tree.NodeHighlighted):
         node = event.node
         self._tree.select_node(node)
-
-    def on_request_refresh(self, msg: RequestRefresh):
-        self.reload()

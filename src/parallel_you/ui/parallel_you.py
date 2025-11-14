@@ -4,7 +4,7 @@ from textual.widgets import Footer, Input, Header, TabbedContent
 from parallel_you.storage.repo_factory import make_repo
 from filter_spec import FilterSpec
 from parallel_you.ui.components import ThreadTree, ThreadDetails, ThreadTab
-from parallel_you.messages.thread_tab import ThreadSelected, ApplyFilter
+from parallel_you.messages.thread_tab import ThreadSelected, ApplyFilter, SagaCreated, StoryCreated
 from parallel_you.messages.app import RequestRefresh
 
 class ParallelYou(App):
@@ -31,14 +31,16 @@ class ParallelYou(App):
         self.post_message(RequestRefresh())
 
     def on_mount(self):
-        from parallel_you.model import Saga
-        if not self._repo.list(self._filter):
-            a = Saga(id=None, title="Build UI")
-            b = Saga(id=None, title="Write Docs")
-            self._repo.upsert(a); self._repo.upsert(b)
         self._tabs.focus()
         self._thread_tab.reload()
 
     def on_request_refresh(self, msg: RequestRefresh):
         self._thread_tab.reload()
+    
+    def on_saga_created(self, msg: SagaCreated):
+        self._thread_tab.on_saga_created(msg)
+
+    def on_story_created(self, msg: StoryCreated):
+        self._thread_tab.on_story_created(msg)
+
     

@@ -2,7 +2,7 @@ import re
 from datetime import datetime
 from pymongo import MongoClient, ReturnDocument
 
-from parallel_you.model import Story, Saga, Thread
+from parallel_you.model.threads import Story, Saga, Thread, StoryState, EnergyBand
 from parallel_you.storage import Repo
 from filter_spec import FilterSpec
 
@@ -67,8 +67,6 @@ class MongoRepo(Repo):
             return Saga(**base, stories=[])
         if kind == "story":
             # adapt state/energy parsing if you store names vs values
-            from parallel_you.model.story_state import StoryState
-            from parallel_you.model.energy_band import EnergyBand
             state = d.get("state")
             energy = d.get("energy_band")
             return Story(

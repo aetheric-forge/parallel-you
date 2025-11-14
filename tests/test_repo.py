@@ -3,9 +3,8 @@ import time
 import pytest
 import os
 
-from parallel_you.storage.repo_factory import make_repo
-from parallel_you.model.saga import Saga
-from parallel_you.model.story import Story
+from parallel_you.storage import make_repo
+from parallel_you.model.threads import Saga, Story
 from filter_spec import FilterSpec
 
 def all_items(repo):

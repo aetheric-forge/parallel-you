@@ -6,8 +6,6 @@ from textual.widgets import Input
 from textual.reactive import reactive
 from textual import on
 
-from parallel_you.model import Thread, Saga, Story
-
 def _default_validator(title: str) -> tuple[bool, str | None]:
     return (bool(title.strip()), "Title is required")
 

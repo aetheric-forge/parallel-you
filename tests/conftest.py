@@ -1,7 +1,6 @@
-# tests/conftest.py
 import os
 import pytest
-from parallel_you.storage.repo_factory import make_repo
+from parallel_you.storage import make_repo
 
 def _has_mongo():
     return bool(os.getenv("MONGO_URI"))

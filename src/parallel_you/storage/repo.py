@@ -1,6 +1,6 @@
 from typing import Protocol
 
-from parallel_you.model import Thread
+from parallel_you.model.threads import Thread
 from filter_spec import FilterSpec
 
 class Repo(Protocol):

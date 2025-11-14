@@ -2,7 +2,7 @@
 
 ## Vision
 
-A thought-organizer based on the idea of multi-threading. Opinionated limited hierarchy that fits well with Agile software methodology: Saga -> Epic -> Story; Sprint will encompass multiple stories as per process. Allow for collaboration by providing basic IAM and RBAC, allow assignments of team members to each level of the organization. Also broadcast events across multiple interfaces.
+A thought-organizer based on the idea of multi-threading. Opinionated limited hierarchy that fits well with Agile software methodology: Saga -> Story; Sprint will encompass multiple stories as per process. Allow for collaboration by providing basic IAM and RBAC, allow assignments of team members to each level of the organization. Also broadcast events across multiple interfaces.
 
 ## Principles
 
@@ -31,8 +31,8 @@ A thought-organizer based on the idea of multi-threading. Opinionated limited hi
 
 ## Roadmap
 
-1. MVP (v0.2.0) Simple TUI with usable functionality and UX - completed 2025-11-06.
-2. Support multiple TUI clients by integrating RabbitMQ via existing adapter.
-3. Develop Web API to expose via WSS to web clients.
-4. Develop Vue.js Typescript application to interface with API via WSS.
-5. Configure Keycloak to provide auth, and integrate existing user backend with Keycloak (SAML or OAuth2)
+1. v0.3 - Complete re-architecture, tested backend components: pluggable storage repo, and message broker with pluggable transport
+2. v1.0 - Polish and UI complete. Feature parity with v0.2.1 with complete rearchitecture.
+3. v1.1 - RabbitMQ instrospection to self-assemble Web API to expose over WSS and HTTPS
+4. v1.2 - Multi-user support using PAM backend
+5. v1.3 - Keycloak integration via LDAPS

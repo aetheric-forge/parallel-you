@@ -1,0 +1,12 @@
+#root { height: 1fr; }              /* take all vertical space */
+
+#thread-tab-pane { height: 1fr; }
+
+#thread-tree, #thread-details {
+    width: 1fr; height: 1fr;
+    border: solid #333; padding: 0 0;
+}
+
+.panel { width: 1fr; height: 1fr; border: solid #444; padding: 1 1; }  /* each panel gets equal width and full height */
+
+.hidden { display: none; }           /* for toggling sprint */

@@ -13,8 +13,8 @@ from util import slugify
 
 from parallel_you.messages.thread_tab.thread_tree import ThreadSelected
 from parallel_you.messages.app import RequestRefresh
-from parallel_you.model import Saga, Story, Thread
-from parallel_you.messages.thread_tab import SagaCreated, SagaUpdated, EditSagaCancelled, ApplyFilter, ThreadSelected, StoryCreated, StoryUpdated
+from parallel_you.model.threads import Saga, Story, Thread
+from parallel_you.messages.threads import SagaCreated, SagaUpdated, EditSagaCancelled, ApplyFilter, ThreadSelected, StoryCreated, StoryUpdated
 from parallel_you.ui import InlineInput
 
 SAGA_GLYPH  = "⚙"

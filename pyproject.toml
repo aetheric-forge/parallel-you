@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "parallel-you"
-version = "0.3.0"
+version = "0.3.1"
 description = "YAML-backed personal thread scheduler with a Textual TUI"
 authors = [{ name = "Valkyr" }]
 readme = "README.md"
@@ -14,11 +14,11 @@ dependencies = [
     "textual>=0.60.0",
     "pyyaml>=6.0.2",
     "typer>=0.12.5",
-    "rich>=13.7.1"
+    "rich>=13.7.1",
+    "pymongo==4.15.3",
+    "reactive==0.1",
+    "typer==0.20.0"
 ]
-
-[project.entry-points."console_scripts"]
-vy-tui = "app:run"
 
 [tool.setuptools]
 packages = { find = { where = ["src"] } }

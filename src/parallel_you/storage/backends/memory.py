@@ -1,5 +1,5 @@
 from parallel_you.storage import Repo
-from parallel_you.model import Story, Saga, Thread 
+from parallel_you.model.threads import Story, Saga, Thread 
 from filter_spec import FilterSpec
 from util import gen_id
 from datetime import datetime

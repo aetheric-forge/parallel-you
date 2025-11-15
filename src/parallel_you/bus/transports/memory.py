@@ -6,6 +6,8 @@ from parallel_you.model.bus import Transport, Handler, Message
 
 class InMemoryTransport(Transport):
     def __init__(self) -> None:
+        self._started = False
+        self._stopped = True
         self._subs: dict[str, list[Handler]] = defaultdict(list)
         self._queue: "asyncio.Queue[Message]" = asyncio.Queue()
         self._task: asyncio.Task | None = None
@@ -27,8 +29,24 @@ class InMemoryTransport(Transport):
     async def start(self) -> None:
         if self._task is None:
             self._task = asyncio.create_task(self._worker())
+        self._stopped = False
+        self._started = True
 
     async def stop(self) -> None:
         if self._task:
             self._task.cancel()
             self._task = None
+        self._stopped = True
+        self._started = False
+
+    @property
+    def started(self) -> bool:
+        return self._started
+    
+    @property
+    def stopped(self) -> bool:
+        return self._stopped
+
+    @property
+    def subscriptions(self) -> dict[str, list[Handler]]:
+        return self._subs

@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from collections.abc import Awaitable, Callable
 from typing import Protocol
+import asyncio
 
 from .message import Message
 
@@ -15,3 +16,6 @@ class Transport(ABC):
     async def start(self) -> None: ...
     @abstractmethod
     async def stop(self) -> None: ...
+
+    @property
+    def subscriptions(self) -> dict[str, list[Handler]]: ...

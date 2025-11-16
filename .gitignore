@@ -216,3 +216,8 @@ workspace.yaml
 
 obj/
 bin/
+
+.idea/
+qodana.yaml
+*.DotSettings.user
+

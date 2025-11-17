@@ -3,21 +3,21 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ParallelYou.App", "ParallelYou.App\ParallelYou.App.csproj", "{0436D384-DC83-47D4-9B0A-375005288251}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ParallelYou.App", "src\ParallelYou\ParallelYou.App\ParallelYou.App.csproj", "{0436D384-DC83-47D4-9B0A-375005288251}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ParallelYou.Model", "ParallelYou.Model\ParallelYou.Model.csproj", "{7F6D930B-14B6-4E8B-AAEC-7E795AC1AF6D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ParallelYou.Model", "src\ParallelYou\ParallelYou.Model\ParallelYou.Model.csproj", "{7F6D930B-14B6-4E8B-AAEC-7E795AC1AF6D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ParallelYou.Bus", "ParallelYou.Bus\ParallelYou.Bus.csproj", "{4AD52D28-DEDC-45EC-A112-AEDC60013DE2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ParallelYou.Bus", "src\ParallelYou\ParallelYou.Bus\ParallelYou.Bus.csproj", "{4AD52D28-DEDC-45EC-A112-AEDC60013DE2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ParallelYou.Repo", "ParallelYou.Repo\ParallelYou.Repo.csproj", "{851D1154-09EB-4E26-A5A0-35A978FC07A2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ParallelYou.Repo", "src\ParallelYou\ParallelYou.Repo\ParallelYou.Repo.csproj", "{851D1154-09EB-4E26-A5A0-35A978FC07A2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ParallelYou.Util", "ParallelYou.Util\ParallelYou.Util.csproj", "{12779A06-1E4B-4783-8BE6-14499F470BCE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ParallelYou.Util", "src\ParallelYou\ParallelYou.Util\ParallelYou.Util.csproj", "{12779A06-1E4B-4783-8BE6-14499F470BCE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ParallelYou.Repo.Abstractions", "ParallelYou.Repo.Abstractions\ParallelYou.Repo.Abstractions.csproj", "{96A5BCAA-3D7F-45B4-B0E2-92ACEAD3DBCA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ParallelYou.Repo.Abstractions", "src\ParallelYou\ParallelYou.Repo.Abstractions\ParallelYou.Repo.Abstractions.csproj", "{96A5BCAA-3D7F-45B4-B0E2-92ACEAD3DBCA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ParallelYou.Bus.Abstractions", "ParallelYou.Bus.Abstractions\ParallelYou.Bus.Abstractions.csproj", "{036D3271-FE74-4138-935B-C120E74CD7AE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ParallelYou.Bus.Abstractions", "src\ParallelYou\ParallelYou.Bus.Abstractions\ParallelYou.Bus.Abstractions.csproj", "{036D3271-FE74-4138-935B-C120E74CD7AE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ParallelYou.Tests", "ParallelYou.Tests\ParallelYou.Tests.csproj", "{212F645A-B41A-483A-AB0F-124F77642EF5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ParallelYou.Tests", "src\ParallelYou\ParallelYou.Tests\ParallelYou.Tests.csproj", "{212F645A-B41A-483A-AB0F-124F77642EF5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

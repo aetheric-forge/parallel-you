@@ -7,4 +7,15 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Spectre.Console" Version="0.54.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ParallelYou.Bus.Abstractions\ParallelYou.Bus.Abstractions.csproj" />
+    <ProjectReference Include="..\ParallelYou.Bus\ParallelYou.Bus.csproj" />
+    <ProjectReference Include="..\ParallelYou.Repo.Abstractions\ParallelYou.Repo.Abstractions.csproj" />
+    <ProjectReference Include="..\ParallelYou.Repo\ParallelYou.Repo.csproj" />
+  </ItemGroup>
+
 </Project>

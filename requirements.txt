@@ -1,6 +1,0 @@
-pymongo>=4.15
-reactive>=0.1
-rich>=14.2
-textual>=6.5
-typer>=0.20
-aio-pika>=9.5

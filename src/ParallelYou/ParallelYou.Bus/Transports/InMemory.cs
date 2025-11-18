@@ -108,29 +108,3 @@ public class InMemoryTransport : ITransport
         return i == p.Length && j == k.Length;
     }
 }
-
-public class InMemoryBroker(ITransport transport) : IBroker
-{
-    public Task Publish(Message msg) => transport.Publish(msg);
-
-    public Task Emit(string routingKey, IReadOnlyDictionary<string, object> payload, IReadOnlyDictionary<string, object>? meta = null)
-    {
-        var msg = new SimpleMessage(payload, routingKey, meta);
-        return transport.Publish(msg);
-    }
-
-    public void Route(string routingKey, MessageHandler handler)
-    {
-        // fire-and-forget subscribe; tests can await Start()
-        transport.Subscribe(routingKey, handler).GetAwaiter().GetResult();
-    }
-
-    private sealed class SimpleMessage(
-        IReadOnlyDictionary<string, object> payload,
-        string? type,
-        IReadOnlyDictionary<string, object>? meta)
-        : Message<Dictionary<string, object>>(new Dictionary<string, object>(payload), type)
-    {
-        public IReadOnlyDictionary<string, object>? Meta { get; } = meta;
-    }
-}

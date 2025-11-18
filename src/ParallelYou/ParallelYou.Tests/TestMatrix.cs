@@ -1,4 +1,5 @@
 using System.Reflection;
+using ParallelYou.Bus;
 using ParallelYou.Bus.Abstractions;
 using ParallelYou.Bus.Transports;
 using ParallelYou.Repo.Abstractions;
@@ -17,7 +18,7 @@ public static class TestMatrix
             (Func<(ITransport transport, IBroker broker)>)(() =>
             {
                 var t = new InMemoryTransport();
-                IBroker b = new InMemoryBroker(t);
+                IBroker b = new MessageBroker(t);
                 return (t, b);
             })
         };
@@ -31,7 +32,7 @@ public static class TestMatrix
                 (Func<(ITransport transport, IBroker broker)>)(() =>
                 {
                     var t = new RabbitMqTransport(rabbitUrl);
-                    IBroker b = new InMemoryBroker(t);
+                    IBroker b = new MessageBroker(t);
                     return (t, b);
                 })
             };

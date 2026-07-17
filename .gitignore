@@ -2,3 +2,4 @@
 .junie/
 bin/
 obj/
+*.DotSettings.user

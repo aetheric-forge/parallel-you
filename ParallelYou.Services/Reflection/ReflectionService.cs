@@ -26,21 +26,26 @@ public class ReflectionService : ServiceBase, IReflectionService
         return await Task.FromResult<IReflection>(reflection);
     }
 
-    public async Task AddEvidenceAsync(Guid reflectionId, IReflectionEvidence evidence, CancellationToken cancellationToken = default)
+    public async Task<bool> AddEvidenceAsync(Guid reflectionId, IReflectionEvidence evidence, CancellationToken cancellationToken = default)
     {
         if (_reflections.TryGetValue(reflectionId, out var reflection))
         {
             reflection.Evidence.Add(evidence);
         }
         await Task.CompletedTask;
+
+        return true;
     }
 
-    public async Task AddInsightAsync(Guid reflectionId, IReflectionInsight insight, CancellationToken cancellationToken = default)
+    public async Task<bool> AddInsightAsync(Guid reflectionId, IReflectionInsight insight,
+        CancellationToken cancellationToken = default)
     {
         if (_reflections.TryGetValue(reflectionId, out var reflection))
         {
             reflection.Insights.Add(insight);
         }
         await Task.CompletedTask;
+
+        return true;
     }
 }

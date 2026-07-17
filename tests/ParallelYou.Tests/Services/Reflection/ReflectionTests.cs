@@ -65,6 +65,8 @@ public class ReflectionTests
         var service = new ReflectionService();
         var insight = new ReflectionInsight { Id = Guid.NewGuid(), Content = "Test Insight", IsAdopted = true };
 
-        await service.AddInsightAsync(Guid.NewGuid(), insight);
+        var success = await service.AddInsightAsync(Guid.NewGuid(), insight);
+        
+        Assert.True(success);
     }
 }

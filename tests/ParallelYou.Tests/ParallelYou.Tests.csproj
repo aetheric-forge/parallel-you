@@ -22,6 +22,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\ParallelYou.Abstractions\ParallelYou.Abstractions.csproj" />
     <ProjectReference Include="..\..\ParallelYou.Services\ParallelYou.Services.csproj" />
+    <ProjectReference Include="..\..\ParallelYou.Web\ParallelYou.Web.csproj" />
   </ItemGroup>
 
 </Project>

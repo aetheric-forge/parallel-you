@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <ItemGroup>
+      <ProjectReference Include="..\runtime\src\Abstractions\Interfaces\AethericForge.Runtime.Abstractions.Interfaces\AethericForge.Runtime.Abstractions.Interfaces.csproj" />
     </ItemGroup>
 
     <PropertyGroup>

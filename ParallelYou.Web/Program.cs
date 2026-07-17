@@ -1,10 +1,13 @@
 using ParallelYou.Web.Components;
+using ParallelYou.Web.Hosting;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+    
+builder.Services.AddForgeCampus();
 
 var app = builder.Build();
 

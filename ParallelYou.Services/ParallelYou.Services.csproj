@@ -3,6 +3,7 @@
   <ItemGroup>
     <ProjectReference Include="..\ParallelYou.Abstractions\ParallelYou.Abstractions.csproj" />
     <ProjectReference Include="..\ParallelYou.Models\ParallelYou.Models.csproj" />
+    <ProjectReference Include="..\runtime\src\Institutions\AethericForge.Runtime.Institutions.Campus\AethericForge.Runtime.Institutions.Campus.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

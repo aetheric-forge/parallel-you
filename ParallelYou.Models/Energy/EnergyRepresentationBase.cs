@@ -1,3 +1,4 @@
+using ParallelYou.Abstractions;
 using ParallelYou.Abstractions.Energy;
 
 namespace ParallelYou.Models.Energy;

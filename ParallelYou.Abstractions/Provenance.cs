@@ -1,4 +1,4 @@
-namespace ParallelYou.Abstractions.Attention;
+namespace ParallelYou.Abstractions;
 
 public enum ProvenanceKind
 {

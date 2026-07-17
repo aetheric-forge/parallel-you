@@ -1,3 +1,4 @@
+using ParallelYou.Abstractions;
 using ParallelYou.Abstractions.Intention;
 
 namespace ParallelYou.Models.Intention;

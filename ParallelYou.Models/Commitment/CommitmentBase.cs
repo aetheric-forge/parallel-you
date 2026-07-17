@@ -1,3 +1,4 @@
+using ParallelYou.Abstractions;
 using ParallelYou.Abstractions.Commitment;
 
 namespace ParallelYou.Models.Commitment;

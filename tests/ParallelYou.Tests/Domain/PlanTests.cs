@@ -1,4 +1,5 @@
 using Moq;
+using ParallelYou.Abstractions;
 using ParallelYou.Abstractions.Plan;
 
 namespace ParallelYou.Tests.Domain;

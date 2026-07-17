@@ -21,6 +21,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Concepts", "Concepts", "{12
 		docs\concepts\person.md = docs\concepts\person.md
 		docs\concepts\plan.md = docs\concepts\plan.md
 		docs\concepts\time.md = docs\concepts\time.md
+		docs\concepts\commitment.md = docs\concepts\commitment.md
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Specifications", "Specifications", "{877932EE-48C1-4EC9-9E56-F6DD6F82BAA3}"
@@ -93,6 +94,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{0AB3BF05-4346-4AA6-1389-037BE0695223}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ParallelYou.Tests", "tests\ParallelYou.Tests\ParallelYou.Tests.csproj", "{E1B518D1-2347-4C11-9DAE-62AE7AA7CCBC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ParallelYou.Services", "ParallelYou.Services\ParallelYou.Services.csproj", "{E5DFFDA2-722E-4AF1-AA99-570E2CD7FC9C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -464,6 +467,18 @@ Global
 		{E1B518D1-2347-4C11-9DAE-62AE7AA7CCBC}.Release|x64.Build.0 = Release|Any CPU
 		{E1B518D1-2347-4C11-9DAE-62AE7AA7CCBC}.Release|x86.ActiveCfg = Release|Any CPU
 		{E1B518D1-2347-4C11-9DAE-62AE7AA7CCBC}.Release|x86.Build.0 = Release|Any CPU
+		{E5DFFDA2-722E-4AF1-AA99-570E2CD7FC9C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E5DFFDA2-722E-4AF1-AA99-570E2CD7FC9C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E5DFFDA2-722E-4AF1-AA99-570E2CD7FC9C}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{E5DFFDA2-722E-4AF1-AA99-570E2CD7FC9C}.Debug|x64.Build.0 = Debug|Any CPU
+		{E5DFFDA2-722E-4AF1-AA99-570E2CD7FC9C}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{E5DFFDA2-722E-4AF1-AA99-570E2CD7FC9C}.Debug|x86.Build.0 = Debug|Any CPU
+		{E5DFFDA2-722E-4AF1-AA99-570E2CD7FC9C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E5DFFDA2-722E-4AF1-AA99-570E2CD7FC9C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E5DFFDA2-722E-4AF1-AA99-570E2CD7FC9C}.Release|x64.ActiveCfg = Release|Any CPU
+		{E5DFFDA2-722E-4AF1-AA99-570E2CD7FC9C}.Release|x64.Build.0 = Release|Any CPU
+		{E5DFFDA2-722E-4AF1-AA99-570E2CD7FC9C}.Release|x86.ActiveCfg = Release|Any CPU
+		{E5DFFDA2-722E-4AF1-AA99-570E2CD7FC9C}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

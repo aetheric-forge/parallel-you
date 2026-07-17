@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\ParallelYou.Abstractions\ParallelYou.Abstractions.csproj" />
+    <ProjectReference Include="..\..\ParallelYou.Services\ParallelYou.Services.csproj" />
   </ItemGroup>
 
 </Project>

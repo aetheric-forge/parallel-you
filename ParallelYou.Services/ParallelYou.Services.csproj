@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ParallelYou.Abstractions\ParallelYou.Abstractions.csproj" />
+    <ProjectReference Include="..\ParallelYou.Models\ParallelYou.Models.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

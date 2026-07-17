@@ -1,10 +1,11 @@
 namespace ParallelYou.Abstractions.Tracking;
 
+using ParallelYou.Abstractions;
+
 public interface ITrackedState
 {
     Guid SubjectId { get; }
     string Value { get; }
-    DateTime EffectiveTime { get; }
-    string? Context { get; }
+    Provenance Provenance { get; }
     decimal Confidence { get; }
 }

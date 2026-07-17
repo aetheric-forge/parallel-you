@@ -1,11 +1,15 @@
+using AethericForge.Runtime.Abstractions.Interfaces.Library.Services;
 using ParallelYou.Abstractions.Plan;
+using ParallelYou.Models.Plan;
+using ParallelYou.Services;
 
 namespace ParallelYou.Services.Plan;
 
-public class PlanningService : IPlanningService
+public class PlanningService(ILibrarian librarian) : ServiceBase, IPlanningService
 {
-    public Task<IPlan> PlanAsync(string subject, CancellationToken cancellationToken = default)
+    public async Task<IPlan> PlanAsync(string subject, CancellationToken cancellationToken = default)
     {
-        return Task.FromResult<IPlan>(new ParallelYou.Models.Plan.Plan(Guid.NewGuid()));
+        await Task.CompletedTask;
+        return new ParallelYou.Models.Plan.Plan(Guid.NewGuid());
     }
 }

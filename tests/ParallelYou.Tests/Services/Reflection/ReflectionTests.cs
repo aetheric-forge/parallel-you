@@ -1,15 +1,18 @@
+using AethericForge.Runtime.Abstractions.Interfaces.Library.Services;
+using Moq;
 using ParallelYou.Abstractions;
 using ParallelYou.Models.Reflection;
 using ParallelYou.Services.Reflection;
+using ParallelYou.Tests;
 
 namespace ParallelYou.Tests.Services.Reflection;
 
-public class ReflectionTests
+public class ReflectionTests : TestBase
 {
     [Fact]
     public async Task StartReflectionAsync_ShouldCreateReflection()
     {
-        var service = new ReflectionService();
+        var service = new ReflectionService(MockLibrarian.Object);
         var subject = new ReflectionSubject { Id = Guid.NewGuid(), Type = "Experience", Description = "Test" };
         var questions = new List<string> { "Question 1" };
 
@@ -25,7 +28,7 @@ public class ReflectionTests
     [Fact]
     public async Task AddEvidenceAsync_ShouldAddEvidence()
     {
-        var service = new ReflectionService();
+        var service = new ReflectionService(MockLibrarian.Object);
         var subject = new ReflectionSubject { Id = Guid.NewGuid(), Type = "Experience", Description = "Test" };
         var reflection = await service.StartReflectionAsync(subject, new List<string>());
         var evidence = new ReflectionEvidence { Id = Guid.NewGuid(), Content = "Test Evidence", Provenance = new Provenance(ProvenanceKind.Declared, "Test Source", DateTimeOffset.UtcNow) };
@@ -39,7 +42,7 @@ public class ReflectionTests
     [Fact]
     public async Task AddInsightAsync_ShouldAddInsight()
     {
-        var service = new ReflectionService();
+        var service = new ReflectionService(MockLibrarian.Object);
         var subject = new ReflectionSubject { Id = Guid.NewGuid(), Type = "Experience", Description = "Test" };
         var reflection = await service.StartReflectionAsync(subject, new List<string>());
         var insight = new ReflectionInsightSubmission { Id = Guid.NewGuid(), Content = "Test Insight" };
@@ -54,7 +57,7 @@ public class ReflectionTests
     [Fact]
     public async Task AddEvidenceAsync_WhenReflectionNotFound_ShouldNotThrow()
     {
-        var service = new ReflectionService();
+        var service = new ReflectionService(MockLibrarian.Object);
         var evidence = new ReflectionEvidence { Id = Guid.NewGuid(), Content = "Test Evidence", Provenance = new Provenance(ProvenanceKind.Declared, "Test Source", DateTimeOffset.UtcNow) };
 
         await service.AddEvidenceAsync(Guid.NewGuid(), evidence);
@@ -63,7 +66,7 @@ public class ReflectionTests
     [Fact]
     public async Task AddInsightAsync_WhenReflectionNotFound_ShouldNotThrow()
     {
-        var service = new ReflectionService();
+        var service = new ReflectionService(MockLibrarian.Object);
         var insight = new ReflectionInsightSubmission { Id = Guid.NewGuid(), Content = "Test Insight" };
 
         var success = await service.AddInsightAsync(Guid.NewGuid(), insight);

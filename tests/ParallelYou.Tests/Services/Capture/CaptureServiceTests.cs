@@ -6,23 +6,23 @@ using AethericForge.Runtime.Abstractions.Interfaces.Knowledge.Representations;
 using AethericForge.Runtime.Abstractions.Interfaces.Knowledge.Authorities;
 using ParallelYou.Abstractions.Capture;
 using ParallelYou.Services.Capture;
+using ParallelYou.Tests;
 
 namespace ParallelYou.Tests.Services.Capture;
 
-public class CaptureServiceTests
+public class CaptureServiceTests : TestBase
 {
     [Fact]
     public async Task CaptureAsync_ShouldCompleteSuccessfully()
     {
         // Arrange
-        var mockLibrarian = new Mock<ILibrarian>();
-        var service = new CaptureService(mockLibrarian.Object);
+        var service = new CaptureService(MockLibrarian.Object);
         
         var evidence = new Mock<ICaptureEvidence>();
         evidence.Setup(e => e.Title).Returns("Test Title");
         evidence.Setup(e => e.Content).Returns("Test Content");
 
-        mockLibrarian.Setup(l => l.PublishArtifactAsync(
+        MockLibrarian.Setup(l => l.PublishArtifactAsync(
             It.IsAny<IKnowledgeDescriptor>(),
             It.IsAny<IEnumerable<IKnowledgeRepresentation>>(),
             It.IsAny<IEnumerable<IKnowledgeReference>?>(),
@@ -35,7 +35,7 @@ public class CaptureServiceTests
 
         // Assert
         Assert.NotNull(result);
-        mockLibrarian.Verify(l => l.PublishArtifactAsync(
+        MockLibrarian.Verify(l => l.PublishArtifactAsync(
             It.IsAny<IKnowledgeDescriptor>(),
             It.IsAny<IEnumerable<IKnowledgeRepresentation>>(),
             It.IsAny<IEnumerable<IKnowledgeReference>?>(),

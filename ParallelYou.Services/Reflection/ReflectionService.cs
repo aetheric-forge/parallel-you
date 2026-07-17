@@ -37,12 +37,17 @@ public class ReflectionService : ServiceBase, IReflectionService
         return true;
     }
 
-    public async Task<bool> AddInsightAsync(Guid reflectionId, IReflectionInsight insight,
+    public async Task<bool> AddInsightAsync(Guid reflectionId, IReflectionInsightSubmission insight,
         CancellationToken cancellationToken = default)
     {
         if (_reflections.TryGetValue(reflectionId, out var reflection))
         {
-            reflection.Insights.Add(insight);
+            reflection.Insights.Add(new ReflectionInsight
+            {
+                Id = insight.Id,
+                Content = insight.Content,
+                IsAdopted = false
+            });
         }
         await Task.CompletedTask;
 

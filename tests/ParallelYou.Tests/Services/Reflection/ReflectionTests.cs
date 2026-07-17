@@ -42,12 +42,13 @@ public class ReflectionTests
         var service = new ReflectionService();
         var subject = new ReflectionSubject { Id = Guid.NewGuid(), Type = "Experience", Description = "Test" };
         var reflection = await service.StartReflectionAsync(subject, new List<string>());
-        var insight = new ReflectionInsight { Id = Guid.NewGuid(), Content = "Test Insight", IsAdopted = true };
+        var insight = new ReflectionInsightSubmission { Id = Guid.NewGuid(), Content = "Test Insight" };
 
         await service.AddInsightAsync(reflection.Id, insight);
 
         Assert.Single(reflection.Insights);
         Assert.Equal(insight.Id, reflection.Insights.First().Id);
+        Assert.False(reflection.Insights.First().IsAdopted);
     }
 
     [Fact]
@@ -63,7 +64,7 @@ public class ReflectionTests
     public async Task AddInsightAsync_WhenReflectionNotFound_ShouldNotThrow()
     {
         var service = new ReflectionService();
-        var insight = new ReflectionInsight { Id = Guid.NewGuid(), Content = "Test Insight", IsAdopted = true };
+        var insight = new ReflectionInsightSubmission { Id = Guid.NewGuid(), Content = "Test Insight" };
 
         var success = await service.AddInsightAsync(Guid.NewGuid(), insight);
         

@@ -7,13 +7,13 @@ namespace ParallelYou.Tests.Services.Recommendation;
 
 public sealed record Recommendation(string Id, string CandidateDescription) : IRecommendation;
 
-public class RecommendationServiceTests
+public class RecommendationServiceTests : TestBase
 {
     [Fact]
     public async Task RecommendAsync_ShouldReturnEmptyListInitially()
     {
         // Arrange
-        var service = new RecommendationService();
+        var service = new RecommendationService(MockLibrarian.Object);
         var subject = "Test Subject";
 
         // Act

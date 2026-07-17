@@ -11,12 +11,12 @@ namespace ParallelYou.Services.Reflection;
 
 public class ReflectionService(ILibrarian librarian) : ServiceBase, IReflectionService
 {
-    private readonly ConcurrentDictionary<Guid, ParallelYou.Models.Reflection.Reflection> _reflections = new();
+    private readonly ConcurrentDictionary<Guid, ParallelYou.Models.Reflection.ReflectionService> _reflections = new();
 
-    private async Task PublishReflectionAsync(ParallelYou.Models.Reflection.Reflection reflection, CancellationToken cancellationToken)
+    private async Task PublishReflectionAsync(ParallelYou.Models.Reflection.ReflectionService reflectionService, CancellationToken cancellationToken)
     {
-        var descriptor = new KnowledgeDescriptor($"Reflection_{reflection.Id}");
-        var content = JsonSerializer.Serialize(reflection);
+        var descriptor = new KnowledgeDescriptor($"Reflection_{reflectionService.Id}");
+        var content = JsonSerializer.Serialize(reflectionService);
         var representation = new KnowledgeRepresentation("application/json",
             content.Length, 
             async _ => await Task.FromResult(new MemoryStream(Encoding.UTF8.GetBytes(content)))
@@ -26,7 +26,7 @@ public class ReflectionService(ILibrarian librarian) : ServiceBase, IReflectionS
 
     public async Task<IReflection> StartReflectionAsync(IReflectionSubject subject, IEnumerable<string> questions, CancellationToken cancellationToken = default)
     {
-        var reflection = new ParallelYou.Models.Reflection.Reflection
+        var reflection = new ParallelYou.Models.Reflection.ReflectionService
         {
             Id = Guid.NewGuid(),
             Subject = subject,

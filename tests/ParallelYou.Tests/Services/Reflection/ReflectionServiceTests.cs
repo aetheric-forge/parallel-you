@@ -4,10 +4,11 @@ using ParallelYou.Abstractions;
 using ParallelYou.Models.Reflection;
 using ParallelYou.Services.Reflection;
 using ParallelYou.Tests;
+using ReflectionService = ParallelYou.Services.Reflection.ReflectionService;
 
 namespace ParallelYou.Tests.Services.Reflection;
 
-public class ReflectionTests : TestBase
+public class ReflectionServiceTests : TestBase
 {
     [Fact]
     public async Task StartReflectionAsync_ShouldCreateReflection()

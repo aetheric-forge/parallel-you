@@ -4,7 +4,7 @@ using ParallelYou.Abstractions.Reflection;
 
 namespace ParallelYou.Models.Reflection;
 
-public class Reflection : IReflection
+public class ReflectionService : IReflection
 {
     public Guid Id { get; set; }
     public IReflectionSubject Subject { get; set; }

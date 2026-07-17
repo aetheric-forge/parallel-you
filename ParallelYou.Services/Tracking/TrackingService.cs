@@ -12,6 +12,8 @@ public class TrackingService(ILibrarian librarian): ServiceBase, ITrackingServic
 {
     public async Task TrackAsync(ITrackedState state, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(state);
+        
         var descriptor = new KnowledgeDescriptor($"Tracking_{state.SubjectId}");
         var content = JsonSerializer.Serialize(state);
         var representation = new KnowledgeRepresentation("application/json",

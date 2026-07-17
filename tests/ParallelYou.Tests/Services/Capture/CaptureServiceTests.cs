@@ -43,4 +43,14 @@ public class CaptureServiceTests : TestBase
             It.IsAny<CancellationToken>()
         ), Times.Once);
     }
+
+    [Fact]
+    public async Task CaptureAsync_WithNullEvidence_ShouldThrowArgumentNullException()
+    {
+        // Arrange
+        var service = new CaptureService(MockLibrarian.Object);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<ArgumentNullException>(() => service.CaptureAsync(null!));
+    }
 }

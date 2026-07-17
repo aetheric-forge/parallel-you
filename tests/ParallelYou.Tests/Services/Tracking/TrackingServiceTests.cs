@@ -39,4 +39,12 @@ public class TrackingServiceTests : TestBase
 
         Assert.Null(result);
     }
+
+    [Fact]
+    public async Task TrackAsync_WithNullState_ShouldThrowArgumentNullException()
+    {
+        var service = new TrackingService(MockLibrarian.Object);
+
+        await Assert.ThrowsAsync<ArgumentNullException>(() => service.TrackAsync(null!));
+    }
 }

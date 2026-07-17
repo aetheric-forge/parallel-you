@@ -11,6 +11,8 @@ public class CaptureService(ILibrarian librarian) : ServiceBase, ICaptureService
 {
     public async Task<IKnowledgeArtifact> CaptureAsync(ICaptureEvidence evidence, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(evidence);
+        
         var descriptor = new KnowledgeDescriptor(evidence.Title);
         var representation = new KnowledgeRepresentation("application/octet-stream",
             evidence.Content.Length, 

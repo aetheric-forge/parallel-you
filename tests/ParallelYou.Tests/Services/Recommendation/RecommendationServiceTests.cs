@@ -22,4 +22,32 @@ public class RecommendationServiceTests : TestBase
         // Assert
         Assert.Empty(result);
     }
+
+    [Fact]
+    public async Task RecommendAsync_WithEmptySubject_ShouldReturnEmptyList()
+    {
+        // Arrange
+        var service = new RecommendationService(MockLibrarian.Object);
+        var subject = string.Empty;
+
+        // Act
+        var result = await service.RecommendAsync(subject);
+
+        // Assert
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    public async Task RecommendAsync_WithNullSubject_ShouldReturnEmptyList()
+    {
+        // Arrange
+        var service = new RecommendationService(MockLibrarian.Object);
+        string? subject = null;
+
+        // Act
+        var result = await service.RecommendAsync(subject!);
+
+        // Assert
+        Assert.Empty(result);
+    }
 }

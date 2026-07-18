@@ -2,6 +2,7 @@ namespace ParallelYou.Abstractions.Recommendation;
 
 public interface IRecommendation
 {
-    string Id { get; }
-    string CandidateDescription { get; }
+    Guid Id { get; }
+    Guid PersonId { get; }
+    IRecommendationRepresentation Representation { get; }
 }

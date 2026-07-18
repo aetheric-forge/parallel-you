@@ -10,6 +10,8 @@ using ParallelYou.Abstractions.Intention;
 using ParallelYou.Services.Intention;
 using ParallelYou.Abstractions.Plan;
 using ParallelYou.Services.Plan;
+using ParallelYou.Abstractions.Recommendation;
+using ParallelYou.Services.Recommendation;
 using AethericForge.Runtime.Abstractions.Interfaces.Archive.Primitives;
 using AethericForge.Runtime.Abstractions.Interfaces.Archive.Providers;
 using AethericForge.Runtime.Abstractions.Interfaces.Archive.Serialization;
@@ -106,6 +108,7 @@ public static class ForgeCampusExtensions
                 .With<IStagingProvider>(_ => new InMemoryStagingProvider("TrackingCurrent"))
                 .With<IStagingProvider>(_ => new InMemoryStagingProvider("IntentionCurrent"))
                 .With<IStagingProvider>(_ => new InMemoryStagingProvider("PlanCurrent"))
+                .With<IStagingProvider>(_ => new InMemoryStagingProvider("RecommendationCurrent"))
                 .With<IStagingService, StagingService>()
                 .With<IWorkbenchService, WorkbenchService>()
                 .With<ITeam<IWorkbenchWorker>>(_ => new Team<IWorkbenchWorker>(Array.Empty<IWorkbenchWorker>()))
@@ -119,6 +122,7 @@ public static class ForgeCampusExtensions
         services.AddScoped<ITrackingService, TrackingService>();
         services.AddScoped<IIntentionService, IntentionService>();
         services.AddScoped<IPlanningService, PlanningService>();
+        services.AddScoped<IRecommendationService, RecommendationService>();
 
         services.AddSingleton<ICampus>(serviceProvider =>
         {

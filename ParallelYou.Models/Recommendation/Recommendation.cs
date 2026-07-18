@@ -1,7 +1,11 @@
+using ParallelYou.Abstractions.Recommendation;
+
 namespace ParallelYou.Models.Recommendation;
 
-public record Recommendation : ParallelYou.Abstractions.Recommendation.IRecommendation
+public sealed record Recommendation(
+    Guid Id,
+    Guid PersonId,
+    RecommendationRepresentation Representation) : IRecommendation
 {
-    public required string Id { get; init; }
-    public required string CandidateDescription { get; init; }
+    IRecommendationRepresentation IRecommendation.Representation => Representation;
 }

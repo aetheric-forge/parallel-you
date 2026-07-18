@@ -14,7 +14,6 @@ using ParallelYou.Abstractions.Recommendation;
 using ParallelYou.Services.Recommendation;
 using AethericForge.Runtime.Abstractions.Interfaces.Archive.Primitives;
 using AethericForge.Runtime.Abstractions.Interfaces.Archive.Providers;
-using AethericForge.Runtime.Abstractions.Interfaces.Archive.Serialization;
 using AethericForge.Runtime.Abstractions.Interfaces.Archive.Services;
 using AethericForge.Runtime.Abstractions.Interfaces.Authorities;
 using AethericForge.Runtime.Abstractions.Interfaces.Identity.Authentication;
@@ -24,7 +23,6 @@ using AethericForge.Runtime.Abstractions.Interfaces.Identity.Services;
 using AethericForge.Runtime.Abstractions.Interfaces.Knowledge.Providers;
 using AethericForge.Runtime.Abstractions.Interfaces.Knowledge.Services;
 using AethericForge.Runtime.Abstractions.Interfaces.Library.Services;
-using AethericForge.Runtime.Abstractions.Interfaces.Post.Services;
 using AethericForge.Runtime.Abstractions.Interfaces.Staging.Providers;
 using AethericForge.Runtime.Abstractions.Interfaces.Staging.Services;
 using AethericForge.Runtime.Abstractions.Interfaces.Workbench.Services;
@@ -35,26 +33,19 @@ using AethericForge.Runtime.Institutions.Abstractions.Primitives;
 using AethericForge.Runtime.Institutions.Archive;
 using AethericForge.Runtime.Institutions.Campus;
 using AethericForge.Runtime.Institutions.Library;
-using AethericForge.Runtime.Institutions.PostOffice;
 using AethericForge.Runtime.Institutions.Registry;
 using AethericForge.Runtime.Institutions.Workbench;
-using AethericForge.Runtime.Models.Archive.Serialization;
 using AethericForge.Runtime.Models.Authorities;
 using AethericForge.Runtime.Models.Identity.Primitives;
-using AethericForge.Runtime.Providers.Archive.InMemory;
 using AethericForge.Runtime.Providers.Archive.MongoDb;
-using AethericForge.Runtime.Providers.Identity.InMemory;
 using AethericForge.Runtime.Providers.Identity.Keycloak;
-using AethericForge.Runtime.Providers.Knowledge.InMemory;
 using AethericForge.Runtime.Providers.Knowledge.MongoDb;
-using AethericForge.Runtime.Providers.Staging.InMemory;
 using AethericForge.Runtime.Providers.Staging.Redis;
 using AethericForge.Runtime.Services.Archive;
 using AethericForge.Runtime.Services.Identity;
 using AethericForge.Runtime.Services.Identity.Lifecycle;
 using AethericForge.Runtime.Services.Knowledge;
 using AethericForge.Runtime.Services.Library;
-using AethericForge.Runtime.Services.Post;
 using AethericForge.Runtime.Services.Registry;
 using AethericForge.Runtime.Services.Staging;
 using AethericForge.Runtime.Services.Workbench;
@@ -85,7 +76,9 @@ public static class ForgeCampusExtensions
             Password = password,
             DatabaseName = databaseName,
             AuthenticationSource = authenticationDatabase,
-            DirectConnection = true
+            DirectConnection = configuration.GetValue(
+                "MongoDb:DirectConnection",
+                true)
         };
 
         return builder.ToMongoUrl().ToString();
@@ -133,11 +126,9 @@ public static class ForgeCampusExtensions
                 .With<IRegistryContext, RegistryContext>()
                 .With<IRegistry, Registry>()
                 .With<IArchiveProvider>(sp => new MongoDbArchiveProvider(
-                    BuildMongoUri(sp.GetRequiredService<IConfiguration>()), 
-                    "parallel-you", 
-                    "archive", 
-                    "MongoDb")
-                )
+                    sp.GetRequiredService<IMongoDatabase>(),
+                    "MongoDb",
+                    "archive"))
                 .With<IArchiveVault, ArchiveVault>()
                 .With<IArchiveService, ArchiveService>()
                 .With<ITeam<IArchiveClerk>>(_ => new Team<IArchiveClerk>(Array.Empty<IArchiveClerk>()))
@@ -145,7 +136,11 @@ public static class ForgeCampusExtensions
                 .With<IArchiveContext, ArchiveContext>()
                 .With<IArchive, Archive>()
                 .With<IMongoClient>(sp => new MongoClient(BuildMongoUri(sp.GetRequiredService<IConfiguration>())))
-                .With<IMongoDatabase>(sp => sp.GetRequiredService<IMongoClient>().GetDatabase("parallel-you"))
+                .With<IMongoDatabase>(sp => sp
+                    .GetRequiredService<IMongoClient>()
+                    .GetDatabase(GetRequiredSetting(
+                        sp.GetRequiredService<IConfiguration>(),
+                        "MongoDb:DatabaseName")))
                 .With<IKnowledgeProvider>(sp => new MongoDbKnowledgeProvider(
                     sp.GetRequiredService<IMongoDatabase>(), "parallel-you", "knowledge"))
                 .With<IKnowledgeService, KnowledgeService>()
@@ -220,6 +215,9 @@ public static class ForgeCampusExtensions
         services.AddSingleton<ForgeCampusHost>();
         services.AddHostedService<ForgeCampusHost>(serviceProvider =>
             serviceProvider.GetRequiredService<ForgeCampusHost>());
+        services.AddHealthChecks()
+            .AddCheck<MongoDbHealthCheck>("mongodb", tags: ["ready"])
+            .AddCheck<RedisHealthCheck>("redis", tags: ["ready"]);
         
         return services;
     }

@@ -1,5 +1,6 @@
 using ParallelYou.Web.Components;
 using ParallelYou.Web.Hosting;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,6 +29,17 @@ app.UseAntiforgery();
 
 app.MapStaticAssets();
 app.MapForgeCampusAuthentication();
+app.MapHealthChecks(
+        "/health/live",
+        new HealthCheckOptions { Predicate = _ => false })
+    .AllowAnonymous();
+app.MapHealthChecks(
+        "/health/ready",
+        new HealthCheckOptions
+        {
+            Predicate = registration => registration.Tags.Contains("ready")
+        })
+    .AllowAnonymous();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 

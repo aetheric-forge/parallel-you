@@ -44,7 +44,7 @@ public static class ForgeAuthenticationExtensions
                 options.ClientSecret = keycloakSection["ClientSecret"];
                 options.ResponseType = OpenIdConnectResponseType.Code;
                 options.UsePkce = true;
-                options.SaveTokens = true;
+                options.SaveTokens = false;
                 options.GetClaimsFromUserInfoEndpoint = true;
                 options.TokenValidationParameters = new TokenValidationParameters
                 {

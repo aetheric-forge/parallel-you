@@ -88,6 +88,12 @@ Never infer a later transition solely from an earlier one.
 
 Authentication establishes operational identity. It does not establish unlimited authority to act for the Person.
 
+### Account-to-Person deployment invariant
+
+Parallel You `v0.1` is deployed on the invariant that each authenticated account represents one human actor. On first successful authentication, the application creates an independent Person identifier and preserves an authority-scoped association between the operational identity and that Person.
+
+The one-actor-per-account constraint does not make the account, session, credential, or identity provider subject equivalent to the Person. Authentication identity and Person identity retain distinct identifiers and lifecycles. Supporting delegates, agents, shared accounts, or several Persons behind one account requires an explicit relationship and authority model beyond this deployment invariant.
+
 ## Representation Doctrine
 
 Every important representation should preserve enough metadata to answer:

@@ -1,5 +1,7 @@
 using ParallelYou.Services.Capture;
 using ParallelYou.Abstractions.Capture;
+using ParallelYou.Abstractions.Person;
+using ParallelYou.Services.Person;
 using AethericForge.Runtime.Abstractions.Interfaces.Archive.Primitives;
 using AethericForge.Runtime.Abstractions.Interfaces.Archive.Providers;
 using AethericForge.Runtime.Abstractions.Interfaces.Archive.Serialization;
@@ -58,6 +60,7 @@ public static class ForgeCampusExtensions
                     "The Aetheric Forge learning and collaboration campus.")
                 .With<IIdentityLifecycleService, IdentityLifecycleService>()
                 .With<IIdentityService, IdentityService>()
+                .With<IPersonService, PersonService>()
                 .With<IIdentityRegistry, IdentityRegistry>()
                 .With<HttpClient, HttpClient>()
                 .With<KeycloakOptions>(sp => new KeycloakOptions

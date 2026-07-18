@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
 using ParallelYou.Web.Authentication;
+using ParallelYou.Abstractions.Person;
 
 namespace ParallelYou.Web.Hosting;
 
@@ -61,6 +62,7 @@ public static class ForgeAuthenticationExtensions
         });
         services.AddCascadingAuthenticationState();
         services.AddScoped<ICurrentIdentityAccessor, CurrentIdentityAccessor>();
+        services.AddScoped<ICurrentPersonAccessor, CurrentPersonAccessor>();
 
         return services;
     }
@@ -157,9 +159,18 @@ public static class ForgeAuthenticationExtensions
             return;
         }
 
+        var personService = context.HttpContext.RequestServices
+            .GetRequiredService<IPersonService>();
+        var person = await personService.GetOrCreatePersonAsync(
+            principalIdentity.Subject,
+            context.HttpContext.RequestAborted);
+
         identity.AddClaim(new Claim(
             "forge:identity-scheme",
             principalIdentity.Scheme.ToString()));
+        identity.AddClaim(new Claim(
+            "parallel-you:person-id",
+            person.Id.ToString("D")));
 
         if (!identity.HasClaim(claim => claim.Type == ClaimTypes.NameIdentifier))
         {

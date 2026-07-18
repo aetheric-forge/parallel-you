@@ -31,6 +31,7 @@ using AethericForge.Runtime.Models.Authorities;
 using AethericForge.Runtime.Models.Identity.Primitives;
 using AethericForge.Runtime.Providers.Archive.InMemory;
 using AethericForge.Runtime.Providers.Identity.InMemory;
+using AethericForge.Runtime.Providers.Identity.Keycloak;
 using AethericForge.Runtime.Providers.Knowledge.InMemory;
 using AethericForge.Runtime.Providers.Staging.InMemory;
 using AethericForge.Runtime.Services.Archive;
@@ -55,28 +56,31 @@ public static class ForgeCampusExtensions
                     "ForgeCampus",
                     new Version(0, 1, 0),
                     "The Aetheric Forge learning and collaboration campus.")
-                .With<IIdentityRegistry, IdentityRegistry>()
-                .With<InMemoryIdentityProvider>(_ =>
-                {
-                    var provider = new InMemoryIdentityProvider(
-                        "ForgeCampus",
-                        IdentityScheme.Local);
-                    
-                    provider.AddSubject(
-                        new IdentitySubject(
-                            "dean", IdentityScheme.Local, "Prof. Valkyr"),
-                        "forge");
-                    
-                    return provider;
-                })
-                .With<IIdentityProvider>(sp => sp.GetRequiredService<InMemoryIdentityProvider>())
                 .With<IIdentityLifecycleService, IdentityLifecycleService>()
                 .With<IIdentityService, IdentityService>()
+                .With<IIdentityRegistry, IdentityRegistry>()
+                .With<HttpClient, HttpClient>()
+                .With<KeycloakOptions>(sp => new KeycloakOptions
+                {
+                    ClientId = "parallel-you",
+                    Realm = "int.aethericforge.ca",
+                    Authority = "https://sso-dev.int.aethericforge.ca/realms/int.aethericforge.ca",
+                    ClientSecret = sp.GetRequiredService<IConfiguration>().GetValue<string>("Keycloak:ClientSecret")
+                                   ?? throw new InvalidOperationException("Keycloak:ClientSecret is required")
+                })
+                .With<IIdentityProvider, KeycloakIdentityProvider>()
                 .With<IRegistryService, RegistryService>()
                 .With<ITeam<IRegistryClerk>>(_ => new Team<IRegistryClerk>(Array.Empty<IRegistryClerk>()))
                 .With<IRegistrar, Registrar>()
                 .With<IRegistryContext, RegistryContext>()
                 .With<IRegistry, Registry>()
+                .With<IArchiveProvider>(_ => new InMemoryArchiveProvider("InMemory"))
+                .With<IArchiveVault, ArchiveVault>()
+                .With<IArchiveService, ArchiveService>()
+                .With<ITeam<IArchiveClerk>>(_ => new Team<IArchiveClerk>(Array.Empty<IArchiveClerk>()))
+                .With<IArchivist, Archivist>()
+                .With<IArchiveContext, ArchiveContext>()
+                .With<IArchive, Archive>()
                 .With<IKnowledgeProvider>(_ => new InMemoryKnowledgeProvider("InMemory"))
                 .With<IKnowledgeService, KnowledgeService>()
                 .With<ITeam<ICuratorClerk>>(_ => new Team<ICuratorClerk>(Array.Empty<ICuratorClerk>()))
@@ -84,11 +88,15 @@ public static class ForgeCampusExtensions
                 .With<ILibraryService, LibraryService>()
                 .With<ITeam<ILibraryClerk>>(_ => new Team<ILibraryClerk>(Array.Empty<ILibraryClerk>()))
                 .With<ILibrarian, Librarian>()
+                .With<ILibraryContext, LibraryContext>()
+                .With<ILibrary, Library>()
                 .With<IStagingProvider>(_ => new InMemoryStagingProvider("InMemory"))
                 .With<IStagingService, StagingService>()
+                .With<IWorkbenchService, WorkbenchService>()
                 .With<ITeam<IWorkbenchWorker>>(_ => new Team<IWorkbenchWorker>(Array.Empty<IWorkbenchWorker>()))
                 .With<IArtificer, Artificer>()
-                .With<IWorkbenchService, WorkbenchService>();            
+                .With<IWorkbenchContext, WorkbenchContext>()
+                .With<IWorkbench, Workbench>();
         });
 
         services.AddScoped<ICaptureService, CaptureService>();
@@ -107,7 +115,7 @@ public static class ForgeCampusExtensions
             campus.Register<ILibrary>(ActivatorUtilities.CreateInstance<Library>(serviceProvider, new LibraryContext(libraryTemplate, serviceProvider, campus)));
 
             var workbenchTemplate = campusTemplate with { Descriptor = new InstitutionDescriptor("Workbench", campusTemplate.Descriptor.Version, "Workbench institution") };
-            campus.Register<ILibrary>(ActivatorUtilities.CreateInstance<Library>(serviceProvider, new WorkbenchContext(workbenchTemplate, serviceProvider, campus)));
+            campus.Register<IWorkbench>(ActivatorUtilities.CreateInstance<Workbench>(serviceProvider, new WorkbenchContext(workbenchTemplate, serviceProvider, campus)));
             
             return campus;
         });

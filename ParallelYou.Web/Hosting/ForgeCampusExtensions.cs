@@ -42,10 +42,13 @@ using AethericForge.Runtime.Models.Archive.Serialization;
 using AethericForge.Runtime.Models.Authorities;
 using AethericForge.Runtime.Models.Identity.Primitives;
 using AethericForge.Runtime.Providers.Archive.InMemory;
+using AethericForge.Runtime.Providers.Archive.MongoDb;
 using AethericForge.Runtime.Providers.Identity.InMemory;
 using AethericForge.Runtime.Providers.Identity.Keycloak;
 using AethericForge.Runtime.Providers.Knowledge.InMemory;
+using AethericForge.Runtime.Providers.Knowledge.MongoDb;
 using AethericForge.Runtime.Providers.Staging.InMemory;
+using AethericForge.Runtime.Providers.Staging.Redis;
 using AethericForge.Runtime.Services.Archive;
 using AethericForge.Runtime.Services.Identity;
 using AethericForge.Runtime.Services.Identity.Lifecycle;
@@ -55,11 +58,50 @@ using AethericForge.Runtime.Services.Post;
 using AethericForge.Runtime.Services.Registry;
 using AethericForge.Runtime.Services.Staging;
 using AethericForge.Runtime.Services.Workbench;
+using MongoDB.Driver;
+using StackExchange.Redis;
 
 namespace ParallelYou.Web.Hosting;
 
 public static class ForgeCampusExtensions 
 {
+    private static string BuildMongoUri(IConfiguration configuration)
+    {
+        var host = GetRequiredSetting(configuration, "MongoDb:Host");
+        var username = GetRequiredSetting(configuration, "MongoDb:Username");
+        var password = GetRequiredSetting(configuration, "MongoDb:Password");
+        var databaseName = GetRequiredSetting(configuration, "MongoDb:DatabaseName");
+        var authenticationDatabase = GetRequiredSetting(
+            configuration,
+            "MongoDb:AuthenticationDatabase");
+
+        var port = configuration.GetValue<int?>("MongoDb:Port")
+                   ?? throw new InvalidOperationException("MongoDb:Port is required.");
+
+        var builder = new MongoUrlBuilder
+        {
+            Server = new MongoServerAddress(host, port),
+            Username = username,
+            Password = password,
+            DatabaseName = databaseName,
+            AuthenticationSource = authenticationDatabase,
+            DirectConnection = true
+        };
+
+        return builder.ToMongoUrl().ToString();
+    }
+    
+    private static string GetRequiredSetting(
+        IConfiguration configuration,
+        string key)
+    {
+        var value = configuration[key];
+
+        return !string.IsNullOrWhiteSpace(value)
+            ? value
+            : throw new InvalidOperationException($"{key} is required.");
+    }    
+    
     public static IServiceCollection AddForgeCampus(this IServiceCollection services)
     {
         services.AddInstitutionTemplate(builder =>
@@ -75,9 +117,12 @@ public static class ForgeCampusExtensions
                 .With<HttpClient, HttpClient>()
                 .With<KeycloakOptions>(sp => new KeycloakOptions
                 {
-                    ClientId = "parallel-you",
-                    Realm = "int.aethericforge.ca",
-                    Authority = "https://sso-dev.int.aethericforge.ca/realms/int.aethericforge.ca",
+                    ClientId =  sp.GetRequiredService<IConfiguration>().GetValue<string>("Keycloak:ClientId")
+                                   ?? throw new InvalidOperationException("Keycloak:ClientId is required"),
+                    Realm =  sp.GetRequiredService<IConfiguration>().GetValue<string>("Keycloak:Realm")
+                                   ?? throw new InvalidOperationException("Keycloak:Realm is required"),
+                    Authority = sp.GetRequiredService<IConfiguration>().GetValue<string>("Keycloak:Authority")
+                                ?? throw new InvalidOperationException("Keycloak:Authority is required"),
                     ClientSecret = sp.GetRequiredService<IConfiguration>().GetValue<string>("Keycloak:ClientSecret")
                                    ?? throw new InvalidOperationException("Keycloak:ClientSecret is required")
                 })
@@ -87,14 +132,22 @@ public static class ForgeCampusExtensions
                 .With<IRegistrar, Registrar>()
                 .With<IRegistryContext, RegistryContext>()
                 .With<IRegistry, Registry>()
-                .With<IArchiveProvider>(_ => new InMemoryArchiveProvider("InMemory"))
+                .With<IArchiveProvider>(sp => new MongoDbArchiveProvider(
+                    BuildMongoUri(sp.GetRequiredService<IConfiguration>()), 
+                    "parallel-you", 
+                    "archive", 
+                    "MongoDb")
+                )
                 .With<IArchiveVault, ArchiveVault>()
                 .With<IArchiveService, ArchiveService>()
                 .With<ITeam<IArchiveClerk>>(_ => new Team<IArchiveClerk>(Array.Empty<IArchiveClerk>()))
                 .With<IArchivist, Archivist>()
                 .With<IArchiveContext, ArchiveContext>()
                 .With<IArchive, Archive>()
-                .With<IKnowledgeProvider>(_ => new InMemoryKnowledgeProvider("InMemory"))
+                .With<IMongoClient>(sp => new MongoClient(BuildMongoUri(sp.GetRequiredService<IConfiguration>())))
+                .With<IMongoDatabase>(sp => sp.GetRequiredService<IMongoClient>().GetDatabase("parallel-you"))
+                .With<IKnowledgeProvider>(sp => new MongoDbKnowledgeProvider(
+                    sp.GetRequiredService<IMongoDatabase>(), "parallel-you", "knowledge"))
                 .With<IKnowledgeService, KnowledgeService>()
                 .With<ITeam<ICuratorClerk>>(_ => new Team<ICuratorClerk>(Array.Empty<ICuratorClerk>()))
                 .With<ICurator, Curator>()
@@ -103,12 +156,33 @@ public static class ForgeCampusExtensions
                 .With<ILibrarian, Librarian>()
                 .With<ILibraryContext, LibraryContext>()
                 .With<ILibrary, Library>()
-                .With<IStagingProvider>(_ => new InMemoryStagingProvider("InMemory"))
-                .With<IStagingProvider>(_ => new InMemoryStagingProvider("ReflectionMapping"))
-                .With<IStagingProvider>(_ => new InMemoryStagingProvider("TrackingCurrent"))
-                .With<IStagingProvider>(_ => new InMemoryStagingProvider("IntentionCurrent"))
-                .With<IStagingProvider>(_ => new InMemoryStagingProvider("PlanCurrent"))
-                .With<IStagingProvider>(_ => new InMemoryStagingProvider("RecommendationCurrent"))
+                .With<IConnectionMultiplexer>(serviceProvider =>
+                {
+                    var configuration =
+                        serviceProvider.GetRequiredService<IConfiguration>();
+
+                    var options = new ConfigurationOptions
+                    {
+                        EndPoints =
+                        {
+                            {
+                                GetRequiredSetting(configuration, "Redis:Host"),
+                                configuration.GetValue<int?>("Redis:Port") ?? 6379
+                            }
+                        },
+                        Password = configuration["Redis:Password"],
+                        Ssl = configuration.GetValue<bool>("Redis:Ssl"),
+                        DefaultDatabase = configuration.GetValue<int?>("Redis:Database") ?? 0,
+                        AbortOnConnectFail = false
+                    };
+
+                    return ConnectionMultiplexer.Connect(options);
+                })                
+                .With<IStagingProvider>(sp => new RedisStagingProvider(sp.GetRequiredService<IConnectionMultiplexer>(), "ReflectionMapping"))
+                .With<IStagingProvider>(sp => new RedisStagingProvider(sp.GetRequiredService<IConnectionMultiplexer>(), "TrackingCurrent"))
+                .With<IStagingProvider>(sp => new RedisStagingProvider(sp.GetRequiredService<IConnectionMultiplexer>(), "IntentionCurrent"))
+                .With<IStagingProvider>(sp => new RedisStagingProvider(sp.GetRequiredService<IConnectionMultiplexer>(), "PlanCurrent"))
+                .With<IStagingProvider>(sp => new RedisStagingProvider(sp.GetRequiredService<IConnectionMultiplexer>(), "RecommendationCurrent"))
                 .With<IStagingService, StagingService>()
                 .With<IWorkbenchService, WorkbenchService>()
                 .With<ITeam<IWorkbenchWorker>>(_ => new Team<IWorkbenchWorker>(Array.Empty<IWorkbenchWorker>()))

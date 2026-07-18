@@ -9,4 +9,8 @@ public interface ICaptureService
         ICaptureEvidence evidence,
         IKnowledgeAuthority authority,
         CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyCollection<IKnowledgeArtifact>> GetCapturesAsync(
+        IKnowledgeAuthority authority,
+        CancellationToken cancellationToken = default);
 }

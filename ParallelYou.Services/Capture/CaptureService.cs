@@ -19,9 +19,12 @@ public class CaptureService(ILibrarian librarian) : ServiceBase, ICaptureService
         ArgumentNullException.ThrowIfNull(authority);
         
         var descriptor = new KnowledgeDescriptor(evidence.Title);
-        var representation = new KnowledgeRepresentation("application/octet-stream",
-            evidence.Content.Length, 
-            async _ => await Task.FromResult(new MemoryStream(Encoding.UTF8.GetBytes(evidence.Content)))
+        var content = Encoding.UTF8.GetBytes(evidence.Content);
+        var representation = new KnowledgeRepresentation(
+            "text/plain",
+            content.LongLength,
+            _ => Task.FromResult<Stream>(new MemoryStream(content)),
+            encoding: "utf-8"
         );
         var artifact = await librarian.PublishArtifactAsync(
             descriptor,
@@ -30,5 +33,13 @@ public class CaptureService(ILibrarian librarian) : ServiceBase, ICaptureService
             ct: cancellationToken);
         
         return artifact;
+    }
+
+    public Task<IReadOnlyCollection<IKnowledgeArtifact>> GetCapturesAsync(
+        IKnowledgeAuthority authority,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(authority);
+        return librarian.FindArtifactsAsync(authority, cancellationToken);
     }
 }

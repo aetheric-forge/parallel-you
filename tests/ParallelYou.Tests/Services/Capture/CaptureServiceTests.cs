@@ -66,4 +66,32 @@ public class CaptureServiceTests : TestBase
         await Assert.ThrowsAsync<ArgumentNullException>(() =>
             service.CaptureAsync(evidence.Object, null!));
     }
+
+    [Fact]
+    public async Task GetCapturesAsync_DelegatesAuthorityToLibrarian()
+    {
+        var service = new CaptureService(MockLibrarian.Object);
+        var authority = new Mock<IKnowledgeAuthority>();
+        IReadOnlyCollection<IKnowledgeArtifact> expected =
+            [new Mock<IKnowledgeArtifact>().Object];
+
+        MockLibrarian
+            .Setup(librarian => librarian.FindArtifactsAsync(
+                authority.Object,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(expected);
+
+        var result = await service.GetCapturesAsync(authority.Object);
+
+        Assert.Same(expected, result);
+    }
+
+    [Fact]
+    public async Task GetCapturesAsync_WithNullAuthority_ShouldThrowArgumentNullException()
+    {
+        var service = new CaptureService(MockLibrarian.Object);
+
+        await Assert.ThrowsAsync<ArgumentNullException>(() =>
+            service.GetCapturesAsync(null!));
+    }
 }

@@ -1,15 +1,12 @@
 @page "/capture"
 @rendermode InteractiveServer
 @using System.ComponentModel.DataAnnotations
-@using System.Security.Claims
-@using AethericForge.Runtime.Abstractions.Interfaces.Identity.Authentication
-@using AethericForge.Runtime.Models.Identity.Primitives
 @using AethericForge.Runtime.Models.Knowledge.Authorities
-@using Microsoft.AspNetCore.Components.Authorization
 @using ParallelYou.Abstractions.Capture
 @using ParallelYou.Models.Capture
+@using ParallelYou.Web.Authentication
 @inject ICaptureService CaptureService
-@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ICurrentIdentityAccessor CurrentIdentity
 @inject ILogger<Capture> Logger
 
 <PageTitle>Capture</PageTitle>
@@ -84,7 +81,9 @@
         {
             var content = input.Content.Trim();
             var title = DeriveTitle(input.Title, content);
-            var authority = await GetCaptureAuthorityAsync();
+            var authority = new KnowledgeAuthority(
+                await CurrentIdentity.GetIdentityAsync(),
+                CaptureAuthority.Context);
             var artifact = await CaptureService.CaptureAsync(
                 new CaptureEvidence(title, content),
                 authority);
@@ -101,40 +100,6 @@
         {
             isSaving = false;
         }
-    }
-
-    private async Task<KnowledgeAuthority> GetCaptureAuthorityAsync()
-    {
-        var authenticationState = await AuthenticationStateProvider
-            .GetAuthenticationStateAsync();
-        var principal = authenticationState.User;
-
-        if (principal.Identity?.IsAuthenticated is not true)
-        {
-            throw new InvalidOperationException(
-                "An authenticated identity is required to capture information.");
-        }
-
-        var subjectId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrWhiteSpace(subjectId))
-        {
-            throw new InvalidOperationException(
-                "The authenticated identity has no subject identifier.");
-        }
-
-        var schemeClaim = principal.FindFirst("forge:identity-scheme")?.Value;
-        if (!Enum.TryParse<IdentityScheme>(schemeClaim, out var scheme))
-        {
-            throw new InvalidOperationException(
-                "The authenticated identity has no valid Forge identity scheme.");
-        }
-
-        var identity = new IdentitySubject(
-            subjectId,
-            scheme,
-            principal.Identity.Name);
-
-        return new KnowledgeAuthority(identity, "ParallelYou.Capture");
     }
 
     private static string DeriveTitle(string? suppliedTitle, string content)

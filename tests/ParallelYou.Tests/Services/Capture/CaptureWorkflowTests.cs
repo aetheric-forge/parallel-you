@@ -27,7 +27,7 @@ public class CaptureWorkflowTests
         var evidence = new CaptureEvidence("Test Title", "Test Content");
         var authority = new KnowledgeAuthority(
             new IdentitySubject("test-person", IdentityScheme.OpenIdConnect),
-            "ParallelYou.Capture");
+            CaptureAuthority.Context);
         
         // Act
         var artifact = await captureService.CaptureAsync(evidence, authority);
@@ -36,6 +36,9 @@ public class CaptureWorkflowTests
         Assert.NotNull(artifact);
         Assert.Equal("Test Title", artifact.Descriptor.Title);
         Assert.Equal("test-person", artifact.Authority?.Identity.SubjectId);
+
+        var captures = await captureService.GetCapturesAsync(authority);
+        Assert.Contains(captures, capture => capture.Reference == artifact.Reference);
         
         // Retrieve
         var retrievedArtifact = await librarian.GetArtifactAsync(artifact.Reference);

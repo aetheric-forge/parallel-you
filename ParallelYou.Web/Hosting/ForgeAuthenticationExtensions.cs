@@ -31,7 +31,7 @@ public static class ForgeAuthenticationExtensions
         var password = form["password"].ToString();
         var returnUrl = GetSafeReturnUrl(form["returnUrl"].ToString());
 
-        var principalIdentity = await campus.Registry.AuthenticateAsync(
+        var principalIdentity = await campus.Registry.Registrar.AuthenticateAsync(
             IdentityScheme.Local,
             new Dictionary<string, string>
             {

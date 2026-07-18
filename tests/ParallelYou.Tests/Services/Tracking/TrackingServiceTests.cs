@@ -47,4 +47,37 @@ public class TrackingServiceTests : TestBase
 
         await Assert.ThrowsAsync<ArgumentNullException>(() => service.TrackAsync(null!));
     }
+
+    [Fact]
+    public async Task TrackAsync_ThenGetCurrentStateAsync_ShouldReturnTrackedState()
+    {
+        var service = new TrackingService(MockLibrarian.Object);
+        var subjectId = Guid.NewGuid();
+        var state = new TestTrackedState(subjectId, "value1", new Provenance(ProvenanceKind.Declared, "test-source", DateTimeOffset.Now), 0.9m);
+
+        await service.TrackAsync(state);
+        
+        // This test will fail until GetCurrentStateAsync is implemented.
+        var result = await service.GetCurrentStateAsync(subjectId);
+        
+        Assert.NotNull(result);
+        Assert.Equal("value1", result!.Value);
+    }
+
+    [Fact]
+    public async Task TrackAsync_WithNewerState_ShouldReplaceCurrentState()
+    {
+        var service = new TrackingService(MockLibrarian.Object);
+        var subjectId = Guid.NewGuid();
+        var state1 = new TestTrackedState(subjectId, "value1", new Provenance(ProvenanceKind.Declared, "test-source", DateTimeOffset.Now), 0.9m);
+        var state2 = new TestTrackedState(subjectId, "value2", new Provenance(ProvenanceKind.Declared, "test-source", DateTimeOffset.Now), 0.9m);
+
+        await service.TrackAsync(state1);
+        await service.TrackAsync(state2);
+        
+        var result = await service.GetCurrentStateAsync(subjectId);
+        
+        Assert.NotNull(result);
+        Assert.Equal("value2", result!.Value);
+    }
 }

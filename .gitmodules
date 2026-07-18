@@ -2,3 +2,7 @@
 	path = runtime
 	url = git@github.com:aetheric-forge/aetheric-runtime.git
 	branch = v2.1
+[submodule "aetheric-runtime"]
+	path = aetheric-runtime
+	url = git@github.com:aetheric-forge/aetheric-runtime.git
+	branch = v2.1

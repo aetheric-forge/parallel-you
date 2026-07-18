@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Text;
 using System.Text.Json;
 using AethericForge.Runtime.Abstractions.Interfaces.Knowledge.Primitives;
@@ -10,9 +11,13 @@ namespace ParallelYou.Services.Tracking;
 
 public class TrackingService(ILibrarian librarian): ServiceBase, ITrackingService
 {
+    private static readonly ConcurrentDictionary<Guid, ITrackedState> _states = new();
+
     public async Task TrackAsync(ITrackedState state, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(state);
+        
+        _states[state.SubjectId] = state;
         
         var descriptor = new KnowledgeDescriptor($"Tracking_{state.SubjectId}");
         var content = JsonSerializer.Serialize(state);
@@ -25,7 +30,6 @@ public class TrackingService(ILibrarian librarian): ServiceBase, ITrackingServic
 
     public async Task<ITrackedState?> GetCurrentStateAsync(Guid subjectId, CancellationToken cancellationToken = default)
     {
-        // Retrieval by SubjectId is not directly supported without an IKnowledgeReference.
-        return await Task.FromResult<ITrackedState?>(null);
+        return await Task.FromResult(_states.GetValueOrDefault(subjectId));
     }
 }

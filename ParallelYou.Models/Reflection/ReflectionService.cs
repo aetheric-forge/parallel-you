@@ -7,11 +7,13 @@ namespace ParallelYou.Models.Reflection;
 public class ReflectionService : IReflection
 {
     public Guid Id { get; set; }
-    public IReflectionSubject Subject { get; set; }
-    public IEnumerable<string> Questions { get; set; }
-    public List<IReflectionEvidence> Evidence { get; set; } = new();
-    public List<IReflectionInsight> Insights { get; set; } = new();
+    public ReflectionSubject Subject { get; set; }
+    public List<string> Questions { get; set; } = new();
+    public List<ReflectionEvidence> Evidence { get; set; } = new();
+    public List<ReflectionInsight> Insights { get; set; } = new();
 
+    IEnumerable<string> IReflection.Questions => Questions;
     IEnumerable<IReflectionEvidence> IReflection.Evidence => Evidence;
     IEnumerable<IReflectionInsight> IReflection.Insights => Insights;
+    IReflectionSubject IReflection.Subject => Subject;
 }

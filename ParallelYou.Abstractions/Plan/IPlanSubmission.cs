@@ -1,12 +1,10 @@
 namespace ParallelYou.Abstractions.Plan;
 
-public interface IPlanRepresentation
+public interface IPlanSubmission
 {
-    Guid Id { get; }
-    Guid PlanId { get; }
-    Provenance Provenance { get; }
     string DisplayName { get; }
     string Course { get; }
     IReadOnlyCollection<Guid> IntentionIds { get; }
+    Provenance Provenance { get; }
     bool IsAccepted { get; }
 }

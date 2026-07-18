@@ -3,5 +3,6 @@ namespace ParallelYou.Abstractions.Plan;
 public interface IPlan
 {
     Guid Id { get; }
-    string Subject { get; }
+    Guid PersonId { get; }
+    IPlanRepresentation Representation { get; }
 }

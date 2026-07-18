@@ -6,11 +6,18 @@ namespace ParallelYou.Models.Plan;
 public abstract class PlanBase : IPlan
 {
     public Guid Id { get; init; }
-    public string Subject { get; init; }
+    public Guid PersonId { get; init; }
+    public PlanRepresentation Representation { get; init; }
 
-    protected PlanBase(Guid id, string subject)
+    IPlanRepresentation IPlan.Representation => Representation;
+
+    protected PlanBase(
+        Guid id,
+        Guid personId,
+        PlanRepresentation representation)
     {
         Id = id;
-        Subject = subject;
+        PersonId = personId;
+        Representation = representation;
     }
 }

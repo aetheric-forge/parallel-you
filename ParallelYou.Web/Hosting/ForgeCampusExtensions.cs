@@ -4,6 +4,8 @@ using ParallelYou.Abstractions.Person;
 using ParallelYou.Services.Person;
 using ParallelYou.Abstractions.Reflection;
 using ParallelYou.Services.Reflection;
+using ParallelYou.Abstractions.Tracking;
+using ParallelYou.Services.Tracking;
 using AethericForge.Runtime.Abstractions.Interfaces.Archive.Primitives;
 using AethericForge.Runtime.Abstractions.Interfaces.Archive.Providers;
 using AethericForge.Runtime.Abstractions.Interfaces.Archive.Serialization;
@@ -97,6 +99,7 @@ public static class ForgeCampusExtensions
                 .With<ILibrary, Library>()
                 .With<IStagingProvider>(_ => new InMemoryStagingProvider("InMemory"))
                 .With<IStagingProvider>(_ => new InMemoryStagingProvider("ReflectionMapping"))
+                .With<IStagingProvider>(_ => new InMemoryStagingProvider("TrackingCurrent"))
                 .With<IStagingService, StagingService>()
                 .With<IWorkbenchService, WorkbenchService>()
                 .With<ITeam<IWorkbenchWorker>>(_ => new Team<IWorkbenchWorker>(Array.Empty<IWorkbenchWorker>()))
@@ -107,6 +110,7 @@ public static class ForgeCampusExtensions
 
         services.AddScoped<ICaptureService, CaptureService>();
         services.AddScoped<IReflectionService, ReflectionService>();
+        services.AddScoped<ITrackingService, TrackingService>();
 
         services.AddSingleton<ICampus>(serviceProvider =>
         {

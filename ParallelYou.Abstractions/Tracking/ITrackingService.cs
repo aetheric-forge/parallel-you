@@ -1,7 +1,28 @@
+using AethericForge.Runtime.Abstractions.Interfaces.Knowledge.Authorities;
+
 namespace ParallelYou.Abstractions.Tracking;
 
 public interface ITrackingService
 {
-    Task TrackAsync(ITrackedState state, CancellationToken cancellationToken = default);
-    Task<ITrackedState?> GetCurrentStateAsync(Guid subjectId, CancellationToken cancellationToken = default);
+    Task<ITrackedState> TrackAsync(
+        ITrackedState state,
+        IKnowledgeAuthority authority,
+        CancellationToken cancellationToken = default);
+
+    Task<ITrackedState?> GetCurrentStateAsync(
+        Guid personId,
+        Guid subjectId,
+        IKnowledgeAuthority authority,
+        CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyCollection<ITrackedState>> GetCurrentStatesAsync(
+        Guid personId,
+        IKnowledgeAuthority authority,
+        CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyCollection<ITrackedState>> GetHistoryAsync(
+        Guid personId,
+        Guid subjectId,
+        IKnowledgeAuthority authority,
+        CancellationToken cancellationToken = default);
 }

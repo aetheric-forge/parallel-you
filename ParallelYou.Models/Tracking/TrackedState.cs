@@ -3,9 +3,13 @@ using ParallelYou.Abstractions.Tracking;
 
 namespace ParallelYou.Models.Tracking;
 
-public record TrackedState(
-    Guid SubjectId,
+public sealed record TrackedState(
+    Guid Id,
+    Guid PersonId,
+    TrackedSubject Subject,
     string Value,
     Provenance Provenance,
-    decimal Confidence
-) : ITrackedState;
+    decimal Confidence) : ITrackedState
+{
+    ITrackedSubject ITrackedState.Subject => Subject;
+}

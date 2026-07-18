@@ -13,6 +13,10 @@
     </ItemGroup>
 
     <ItemGroup>
+      <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="10.0.0" />
+    </ItemGroup>
+
+    <ItemGroup>
       <ProjectReference Include="..\ParallelYou.Abstractions\ParallelYou.Abstractions.csproj" />
       <ProjectReference Include="..\ParallelYou.Services\ParallelYou.Services.csproj" />
       <ProjectReference Include="..\runtime\src\Institutions\AethericForge.Runtime.Institutions.Campus\AethericForge.Runtime.Institutions.Campus.csproj" />

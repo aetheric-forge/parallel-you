@@ -8,6 +8,9 @@ using AethericForge.Runtime.Abstractions.Interfaces.Library.Services;
 using AethericForge.Runtime.Abstractions.Interfaces.Staging.Primitives;
 using AethericForge.Runtime.Abstractions.Interfaces.Workbench.Services;
 using AethericForge.Runtime.Models.Knowledge.Primitives;
+using AethericForge.Runtime.Abstractions.Interfaces.Identity.Authentication;
+using AethericForge.Runtime.Models.Identity.Primitives;
+using AethericForge.Runtime.Models.Knowledge.Authorities;
 using Moq;
 using ParallelYou.Abstractions;
 using ParallelYou.Models.Reflection;
@@ -19,6 +22,11 @@ namespace ParallelYou.Tests.Services.Reflection;
 
 public class ReflectionServiceTests : TestBase
 {
+    private static IKnowledgeAuthority CreateAuthority(string subjectId = "person")
+        => new KnowledgeAuthority(
+            new IdentitySubject(subjectId, IdentityScheme.OpenIdConnect),
+            ParallelYou.Abstractions.Reflection.ReflectionAuthority.Context);
+
     private class ConcreteKnowledgeRepresentation : IKnowledgeRepresentation
     {
         public string ContentType { get; set; } = "application/json";
@@ -52,6 +60,8 @@ public class ReflectionServiceTests : TestBase
         var service = new ReflectionService(librarianMock.Object, artificerMock.Object);
         var subject = new ReflectionSubject { Id = Guid.NewGuid(), Type = "Experience", Description = "Test" };
         var questions = new List<string> { "Question 1" };
+        var personId = Guid.NewGuid();
+        var authority = CreateAuthority();
 
         var artifact = new ConcreteKnowledgeArtifact();
         
@@ -78,9 +88,14 @@ public class ReflectionServiceTests : TestBase
         artificerMock.Setup(a => a.OpenReadAsync(It.IsAny<IStagingReference>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new MemoryStream(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(referenceMock))));
 
-        var reflection = await service.StartReflectionAsync(subject, questions);
+        var reflection = await service.StartReflectionAsync(
+            personId,
+            subject,
+            questions,
+            authority);
 
         Assert.NotNull(reflection);
+        Assert.Equal(personId, reflection.PersonId);
         Assert.Equal(subject.Id, reflection.Subject.Id);
         Assert.Single(reflection.Questions);
         Assert.Empty(reflection.Evidence);
@@ -98,6 +113,8 @@ public class ReflectionServiceTests : TestBase
         librarianMock.Setup(l => l.PublishArtifactAsync(It.IsAny<IKnowledgeDescriptor>(), It.IsAny<IEnumerable<IKnowledgeRepresentation>>(), It.IsAny<IEnumerable<IKnowledgeReference>>(), It.IsAny<IKnowledgeAuthority>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((IKnowledgeDescriptor descriptor, IEnumerable<IKnowledgeRepresentation> reps, IEnumerable<IKnowledgeReference> lineage, IKnowledgeAuthority authority, CancellationToken ct) => {
                 _currentArtifact.Representations = reps.ToList();
+                _currentArtifact.Authority = authority;
+                _currentArtifact.UpdatedAtUtc = DateTimeOffset.UtcNow;
                 return _currentArtifact;
             });
 
@@ -133,11 +150,13 @@ public class ReflectionServiceTests : TestBase
         
         var service = new ReflectionService(librarianMock.Object, artificerMock.Object);
         var subject = new ReflectionSubject { Id = Guid.NewGuid(), Type = "Experience", Description = "Test" };
+        var authority = CreateAuthority();
         
-        var reflection = await service.StartReflectionAsync(subject, new List<string>());
+        var reflection = await service.StartReflectionAsync(
+            Guid.NewGuid(), subject, [], authority);
         var evidence = new ReflectionEvidence { Id = Guid.NewGuid(), Content = "Test Evidence", Provenance = new Provenance(ProvenanceKind.Declared, "Test Source", DateTimeOffset.UtcNow) };
 
-        await service.AddEvidenceAsync(reflection.Id, evidence);
+        await service.AddEvidenceAsync(reflection.Id, evidence, authority);
 
         var updatedReflection = await GetReflectionFromArtifact();
         Assert.Single(updatedReflection.Evidence);
@@ -153,16 +172,18 @@ public class ReflectionServiceTests : TestBase
         
         var service = new ReflectionService(librarianMock.Object, artificerMock.Object);
         var subject = new ReflectionSubject { Id = Guid.NewGuid(), Type = "Experience", Description = "Test" };
+        var authority = CreateAuthority();
         
-        var reflection = await service.StartReflectionAsync(subject, new List<string>());
+        var reflection = await service.StartReflectionAsync(
+            Guid.NewGuid(), subject, [], authority);
         var insight = new ReflectionInsightSubmission { Id = Guid.NewGuid(), Content = "Test Insight" };
 
-        await service.AddInsightAsync(reflection.Id, insight);
+        await service.AddInsightAsync(reflection.Id, insight, authority);
 
         var updatedReflection = await GetReflectionFromArtifact();
         Assert.Single(updatedReflection.Insights);
         Assert.Equal(insight.Id, updatedReflection.Insights.First().Id);
-        Assert.False(updatedReflection.Insights.First().IsAdopted);
+        Assert.True(updatedReflection.Insights.First().IsAdopted);
     }
 
     [Fact]
@@ -173,7 +194,8 @@ public class ReflectionServiceTests : TestBase
         var service = new ReflectionService(librarianMock.Object, artificerMock.Object);
         var evidence = new ReflectionEvidence { Id = Guid.NewGuid(), Content = "Test Evidence", Provenance = new Provenance(ProvenanceKind.Declared, "Test Source", DateTimeOffset.UtcNow) };
 
-        await service.AddEvidenceAsync(Guid.NewGuid(), evidence);
+        await service.AddEvidenceAsync(
+            Guid.NewGuid(), evidence, CreateAuthority());
     }
 
     [Fact]
@@ -184,7 +206,8 @@ public class ReflectionServiceTests : TestBase
         var service = new ReflectionService(librarianMock.Object, artificerMock.Object);
         var insight = new ReflectionInsightSubmission { Id = Guid.NewGuid(), Content = "Test Insight" };
 
-        var success = await service.AddInsightAsync(Guid.NewGuid(), insight);
+        var success = await service.AddInsightAsync(
+            Guid.NewGuid(), insight, CreateAuthority());
         
         Assert.False(success);
     }

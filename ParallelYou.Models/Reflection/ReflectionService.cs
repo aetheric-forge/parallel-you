@@ -7,6 +7,7 @@ namespace ParallelYou.Models.Reflection;
 public class ReflectionService : IReflection
 {
     public Guid Id { get; set; }
+    public Guid PersonId { get; set; }
     public ReflectionSubject Subject { get; set; }
     public List<string> Questions { get; set; } = new();
     public List<ReflectionEvidence> Evidence { get; set; } = new();

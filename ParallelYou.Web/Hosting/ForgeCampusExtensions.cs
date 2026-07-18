@@ -101,7 +101,7 @@ public static class ForgeCampusExtensions
         {
             builder.WithDescriptor(
                     "ForgeCampus",
-                    new Version(0, 1, 0),
+                    new Version(1, 0, 0),
                     "The Aetheric Forge learning and collaboration campus.")
                 .With<IIdentityLifecycleService, IdentityLifecycleService>()
                 .With<IIdentityService, IdentityService>()

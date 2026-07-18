@@ -1,0 +1,16 @@
+.git
+**/.git
+.github
+.idea
+.junie
+.vs
+**/bin
+**/obj
+**/TestResults
+*.DotSettings.user
+*.user
+*.suo
+.env
+.env.*
+Dockerfile*
+README.md

@@ -6,7 +6,6 @@ using AethericForge.Runtime.Abstractions.Interfaces.Library.Services;
 using AethericForge.Runtime.Abstractions.Interfaces.Workbench.Services;
 using AethericForge.Runtime.Models.Knowledge.Primitives;
 using AethericForge.Runtime.Models.Knowledge.Representations;
-using AethericForge.Runtime.Models.Staging;
 using ParallelYou.Abstractions.Tracking;
 using ParallelYou.Models.Tracking;
 
@@ -45,13 +44,12 @@ public sealed class TrackingService(
             authority,
             cancellationToken);
 
-        var referenceContent = JsonSerializer.SerializeToUtf8Bytes(
-            artifact.Reference);
-        await artificer.PutAsync(
+        await CurrentArtifactResolver.TryStoreReferenceAsync(
+            artificer,
             CurrentStateStage,
             GetCurrentStateKey(authority, state.PersonId, state.Subject.Id),
-            new MemoryStream(referenceContent),
-            ct: cancellationToken);
+            artifact.Reference,
+            cancellationToken);
 
         return trackedState;
     }
@@ -132,31 +130,19 @@ public sealed class TrackingService(
         IKnowledgeAuthority authority,
         CancellationToken cancellationToken)
     {
-        var mapping = new StagingReference(
+        var current = await CurrentArtifactResolver.ResolveAsync(
+            librarian,
+            artificer,
             CurrentStateStage,
-            GetCurrentStateKey(authority, personId, subjectId));
-        if (!await artificer.ExistsAsync(mapping, cancellationToken))
-        {
-            return null;
-        }
-
-        await using var stream = await artificer.OpenReadAsync(
-            mapping,
+            GetCurrentStateKey(authority, personId, subjectId),
+            authority,
+            DeserializeStateAsync,
+            state =>
+                state.PersonId == personId &&
+                state.Subject.Id == subjectId,
             cancellationToken);
-        var reference = await JsonSerializer.DeserializeAsync<KnowledgeReference>(
-            stream,
-            cancellationToken: cancellationToken);
-        if (reference is null)
-        {
-            return null;
-        }
 
-        var artifact = await librarian.GetArtifactAsync(
-            reference,
-            cancellationToken);
-        return artifact is not null && HasAuthority(artifact, authority)
-            ? artifact
-            : null;
+        return current?.Artifact;
     }
 
     private async Task<List<TrackedStateArtifact>> GetStatesAsync(
@@ -270,23 +256,6 @@ public sealed class TrackingService(
                 $"Tracking authority context must be '{TrackingAuthority.Context}'.",
                 nameof(authority));
         }
-    }
-
-    private static bool HasAuthority(
-        IKnowledgeArtifact artifact,
-        IKnowledgeAuthority authority)
-    {
-        var candidate = artifact.Authority;
-        return candidate is not null &&
-               candidate.Identity.Scheme == authority.Identity.Scheme &&
-               string.Equals(
-                   candidate.Identity.SubjectId,
-                   authority.Identity.SubjectId,
-                   StringComparison.Ordinal) &&
-               string.Equals(
-                   candidate.Context,
-                   authority.Context,
-                   StringComparison.Ordinal);
     }
 
     private static string GetCurrentStateKey(

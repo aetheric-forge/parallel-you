@@ -22,7 +22,9 @@
   <ItemGroup>
     <ProjectReference Include="..\..\ParallelYou.Abstractions\ParallelYou.Abstractions.csproj" />
     <ProjectReference Include="..\..\ParallelYou.Services\ParallelYou.Services.csproj" />
-    <ProjectReference Include="..\..\ParallelYou.Web\ParallelYou.Web.csproj" />
+    <ProjectReference Include="..\..\runtime\src\Providers\AethericForge.Runtime.Providers.Knowledge.InMemory\AethericForge.Runtime.Providers.Knowledge.InMemory.csproj" />
+    <ProjectReference Include="..\..\runtime\src\Services\AethericForge.Runtime.Services.Knowledge\AethericForge.Runtime.Services.Knowledge.csproj" />
+    <ProjectReference Include="..\..\runtime\src\Services\AethericForge.Runtime.Services.Library\AethericForge.Runtime.Services.Library.csproj" />
   </ItemGroup>
 
 </Project>

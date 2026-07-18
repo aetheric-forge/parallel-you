@@ -6,7 +6,6 @@ using AethericForge.Runtime.Abstractions.Interfaces.Library.Services;
 using AethericForge.Runtime.Abstractions.Interfaces.Workbench.Services;
 using AethericForge.Runtime.Models.Knowledge.Primitives;
 using AethericForge.Runtime.Models.Knowledge.Representations;
-using AethericForge.Runtime.Models.Staging;
 using ParallelYou.Abstractions.Intention;
 using ParallelYou.Models.Intention;
 
@@ -130,34 +129,22 @@ public sealed class IntentionService(
         IKnowledgeAuthority authority,
         CancellationToken cancellationToken)
     {
-        var mapping = new StagingReference(
+        var current = await CurrentArtifactResolver.ResolveAsync(
+            librarian,
+            artificer,
             CurrentIntentionStage,
             GetCurrentIntentionKey(
                 authority,
                 personId,
-                intentionId));
-        if (!await artificer.ExistsAsync(mapping, cancellationToken))
-        {
-            return null;
-        }
-
-        await using var stream = await artificer.OpenReadAsync(
-            mapping,
+                intentionId),
+            authority,
+            DeserializeIntentionAsync,
+            intention =>
+                intention.PersonId == personId &&
+                intention.Id == intentionId,
             cancellationToken);
-        var reference = await JsonSerializer.DeserializeAsync<KnowledgeReference>(
-            stream,
-            cancellationToken: cancellationToken);
-        if (reference is null)
-        {
-            return null;
-        }
 
-        var artifact = await librarian.GetArtifactAsync(
-            reference,
-            cancellationToken);
-        return artifact is not null && HasAuthority(artifact, authority)
-            ? artifact
-            : null;
+        return current?.Artifact;
     }
 
     private async Task PublishIntentionAsync(
@@ -178,16 +165,15 @@ public sealed class IntentionService(
             authority,
             cancellationToken);
 
-        var referenceContent = JsonSerializer.SerializeToUtf8Bytes(
-            artifact.Reference);
-        await artificer.PutAsync(
+        await CurrentArtifactResolver.TryStoreReferenceAsync(
+            artificer,
             CurrentIntentionStage,
             GetCurrentIntentionKey(
                 authority,
                 intention.PersonId,
                 intention.Id),
-            new MemoryStream(referenceContent),
-            ct: cancellationToken);
+            artifact.Reference,
+            cancellationToken);
     }
 
     private async Task<List<IntentionArtifact>> GetIntentionArtifactsAsync(
@@ -297,23 +283,6 @@ public sealed class IntentionService(
                 $"Intention authority context must be '{IntentionAuthority.Context}'.",
                 nameof(authority));
         }
-    }
-
-    private static bool HasAuthority(
-        IKnowledgeArtifact artifact,
-        IKnowledgeAuthority authority)
-    {
-        var candidate = artifact.Authority;
-        return candidate is not null &&
-               candidate.Identity.Scheme == authority.Identity.Scheme &&
-               string.Equals(
-                   candidate.Identity.SubjectId,
-                   authority.Identity.SubjectId,
-                   StringComparison.Ordinal) &&
-               string.Equals(
-                   candidate.Context,
-                   authority.Context,
-                   StringComparison.Ordinal);
     }
 
     private static string GetCurrentIntentionKey(

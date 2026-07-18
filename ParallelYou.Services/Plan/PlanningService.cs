@@ -7,7 +7,6 @@ using AethericForge.Runtime.Abstractions.Interfaces.Workbench.Services;
 using AethericForge.Runtime.Models.Knowledge.Primitives;
 using AethericForge.Runtime.Models.Knowledge.Authorities;
 using AethericForge.Runtime.Models.Knowledge.Representations;
-using AethericForge.Runtime.Models.Staging;
 using ParallelYou.Abstractions.Intention;
 using ParallelYou.Abstractions.Plan;
 using ParallelYou.Models.Plan;
@@ -136,31 +135,17 @@ public sealed class PlanningService(
         IKnowledgeAuthority authority,
         CancellationToken cancellationToken)
     {
-        var mapping = new StagingReference(
+        var current = await CurrentArtifactResolver.ResolveAsync(
+            librarian,
+            artificer,
             CurrentPlanStage,
-            GetCurrentPlanKey(authority, personId, planId));
-        if (!await artificer.ExistsAsync(mapping, cancellationToken))
-        {
-            return null;
-        }
-
-        await using var stream = await artificer.OpenReadAsync(
-            mapping,
+            GetCurrentPlanKey(authority, personId, planId),
+            authority,
+            DeserializePlanAsync,
+            plan => plan.PersonId == personId && plan.Id == planId,
             cancellationToken);
-        var reference = await JsonSerializer.DeserializeAsync<KnowledgeReference>(
-            stream,
-            cancellationToken: cancellationToken);
-        if (reference is null)
-        {
-            return null;
-        }
 
-        var artifact = await librarian.GetArtifactAsync(
-            reference,
-            cancellationToken);
-        return artifact is not null && HasAuthority(artifact, authority)
-            ? artifact
-            : null;
+        return current?.Artifact;
     }
 
     private async Task PublishPlanAsync(
@@ -181,13 +166,12 @@ public sealed class PlanningService(
             authority,
             cancellationToken);
 
-        var referenceContent = JsonSerializer.SerializeToUtf8Bytes(
-            artifact.Reference);
-        await artificer.PutAsync(
+        await CurrentArtifactResolver.TryStoreReferenceAsync(
+            artificer,
             CurrentPlanStage,
             GetCurrentPlanKey(authority, plan.PersonId, plan.Id),
-            new MemoryStream(referenceContent),
-            ct: cancellationToken);
+            artifact.Reference,
+            cancellationToken);
     }
 
     private async Task<List<PlanArtifact>> GetPlanArtifactsAsync(
@@ -336,23 +320,6 @@ public sealed class PlanningService(
                 $"Plan authority context must be '{PlanAuthority.Context}'.",
                 nameof(authority));
         }
-    }
-
-    private static bool HasAuthority(
-        IKnowledgeArtifact artifact,
-        IKnowledgeAuthority authority)
-    {
-        var candidate = artifact.Authority;
-        return candidate is not null &&
-               candidate.Identity.Scheme == authority.Identity.Scheme &&
-               string.Equals(
-                   candidate.Identity.SubjectId,
-                   authority.Identity.SubjectId,
-                   StringComparison.Ordinal) &&
-               string.Equals(
-                   candidate.Context,
-                   authority.Context,
-                   StringComparison.Ordinal);
     }
 
     private static string GetCurrentPlanKey(

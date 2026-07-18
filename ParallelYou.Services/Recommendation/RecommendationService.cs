@@ -7,7 +7,6 @@ using AethericForge.Runtime.Abstractions.Interfaces.Workbench.Services;
 using AethericForge.Runtime.Models.Knowledge.Authorities;
 using AethericForge.Runtime.Models.Knowledge.Primitives;
 using AethericForge.Runtime.Models.Knowledge.Representations;
-using AethericForge.Runtime.Models.Staging;
 using ParallelYou.Abstractions;
 using ParallelYou.Abstractions.Plan;
 using ParallelYou.Abstractions.Recommendation;
@@ -206,44 +205,24 @@ public sealed class RecommendationService(
         IKnowledgeAuthority authority,
         CancellationToken cancellationToken)
     {
-        var mapping = new StagingReference(
+        var current = await CurrentArtifactResolver.ResolveAsync(
+            librarian,
+            artificer,
             CurrentRecommendationStage,
             GetCurrentRecommendationKey(
                 authority,
                 personId,
-                recommendationId));
-        if (!await artificer.ExistsAsync(mapping, cancellationToken))
-        {
-            return null;
-        }
-
-        await using var stream = await artificer.OpenReadAsync(
-            mapping,
+                recommendationId),
+            authority,
+            DeserializeRecommendationAsync,
+            recommendation =>
+                recommendation.PersonId == personId &&
+                recommendation.Id == recommendationId,
             cancellationToken);
-        var reference = await JsonSerializer.DeserializeAsync<KnowledgeReference>(
-            stream,
-            cancellationToken: cancellationToken);
-        if (reference is null)
-        {
-            return null;
-        }
 
-        var artifact = await librarian.GetArtifactAsync(
-            reference,
-            cancellationToken);
-        if (artifact is null || !HasAuthority(artifact, authority))
-        {
-            return null;
-        }
-
-        var recommendation = await DeserializeRecommendationAsync(
-            artifact,
-            cancellationToken);
-        return recommendation is not null &&
-               recommendation.PersonId == personId &&
-               recommendation.Id == recommendationId
-            ? new LoadedRecommendation(recommendation, artifact)
-            : null;
+        return current is null
+            ? null
+            : new LoadedRecommendation(current.Model, current.Artifact);
     }
 
     private async Task PublishRecommendationAsync(
@@ -264,16 +243,15 @@ public sealed class RecommendationService(
             authority,
             cancellationToken);
 
-        var referenceContent = JsonSerializer.SerializeToUtf8Bytes(
-            artifact.Reference);
-        await artificer.PutAsync(
+        await CurrentArtifactResolver.TryStoreReferenceAsync(
+            artificer,
             CurrentRecommendationStage,
             GetCurrentRecommendationKey(
                 authority,
                 recommendation.PersonId,
                 recommendation.Id),
-            new MemoryStream(referenceContent),
-            ct: cancellationToken);
+            artifact.Reference,
+            cancellationToken);
     }
 
     private async Task<List<RecommendationArtifact>>
@@ -469,23 +447,6 @@ public sealed class RecommendationService(
                 $"Recommendation authority context must be '{RecommendationAuthority.Context}'.",
                 nameof(authority));
         }
-    }
-
-    private static bool HasAuthority(
-        IKnowledgeArtifact artifact,
-        IKnowledgeAuthority authority)
-    {
-        var candidate = artifact.Authority;
-        return candidate is not null &&
-               candidate.Identity.Scheme == authority.Identity.Scheme &&
-               string.Equals(
-                   candidate.Identity.SubjectId,
-                   authority.Identity.SubjectId,
-                   StringComparison.Ordinal) &&
-               string.Equals(
-                   candidate.Context,
-                   authority.Context,
-                   StringComparison.Ordinal);
     }
 
     private static string GetCurrentRecommendationKey(

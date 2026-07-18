@@ -152,6 +152,140 @@ public class TrackingServiceTests
     }
 
     [Fact]
+    public async Task GetCurrentStateAsync_RecoversMissingPointerFromDurableHistory()
+    {
+        var librarian = new Mock<ILibrarian>();
+        var artificer = new Mock<IArtificer>();
+        var authority = CreateAuthority();
+        var personId = Guid.NewGuid();
+        var subjectId = Guid.NewGuid();
+        var current = CreateArtifact(
+            CreateState(personId, subjectId, "Recovered"),
+            authority,
+            DateTimeOffset.UtcNow);
+        artificer.Setup(candidate => candidate.ExistsAsync(
+                It.IsAny<IStagingReference>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+        librarian.Setup(candidate => candidate.FindArtifactsAsync(
+                authority,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync([current]);
+        artificer.Setup(candidate => candidate.PutAsync(
+                "TrackingCurrent",
+                It.IsAny<string>(),
+                It.IsAny<Stream>(),
+                It.IsAny<IStagingMetadata>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Mock.Of<IStagingReference>());
+
+        var service = new TrackingService(librarian.Object, artificer.Object);
+        var recovered = await service.GetCurrentStateAsync(
+            personId,
+            subjectId,
+            authority);
+
+        Assert.NotNull(recovered);
+        Assert.Equal("Recovered", recovered!.Value);
+        artificer.Verify(candidate => candidate.PutAsync(
+            "TrackingCurrent",
+            It.Is<string>(key =>
+                key.Contains(personId.ToString("N")) &&
+                key.Contains(subjectId.ToString("N"))),
+            It.IsAny<Stream>(),
+            It.IsAny<IStagingMetadata>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task GetCurrentStateAsync_PrefersNewerDurableArtifactOverStalePointer()
+    {
+        var librarian = new Mock<ILibrarian>();
+        var artificer = new Mock<IArtificer>();
+        var authority = CreateAuthority();
+        var personId = Guid.NewGuid();
+        var subjectId = Guid.NewGuid();
+        var cached = CreateArtifact(
+            CreateState(personId, subjectId, "Cached"),
+            authority,
+            DateTimeOffset.UtcNow.AddMinutes(-1));
+        var durable = CreateArtifact(
+            CreateState(personId, subjectId, "Durable"),
+            authority,
+            DateTimeOffset.UtcNow);
+        SetupCurrentArtifact(librarian, artificer, cached);
+        librarian.Setup(candidate => candidate.FindArtifactsAsync(
+                authority,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync([cached, durable]);
+        artificer.Setup(candidate => candidate.PutAsync(
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<Stream>(),
+                It.IsAny<IStagingMetadata>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Mock.Of<IStagingReference>());
+
+        var service = new TrackingService(librarian.Object, artificer.Object);
+        var recovered = await service.GetCurrentStateAsync(
+            personId,
+            subjectId,
+            authority);
+
+        Assert.NotNull(recovered);
+        Assert.Equal("Durable", recovered!.Value);
+        artificer.Verify(candidate => candidate.PutAsync(
+            "TrackingCurrent",
+            It.IsAny<string>(),
+            It.IsAny<Stream>(),
+            It.IsAny<IStagingMetadata>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task TrackAsync_CacheFailureDoesNotUndoDurablePublication()
+    {
+        var librarian = new Mock<ILibrarian>();
+        var artificer = new Mock<IArtificer>();
+        var authority = CreateAuthority();
+        var state = CreateState(Guid.NewGuid(), Guid.NewGuid());
+        var artifact = CreateArtifact(state, authority, DateTimeOffset.UtcNow);
+        artificer.Setup(candidate => candidate.ExistsAsync(
+                It.IsAny<IStagingReference>(),
+                It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("Redis unavailable"));
+        librarian.Setup(candidate => candidate.FindArtifactsAsync(
+                authority,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+        librarian.Setup(candidate => candidate.PublishArtifactAsync(
+                It.IsAny<IKnowledgeDescriptor>(),
+                It.IsAny<IEnumerable<IKnowledgeRepresentation>>(),
+                null,
+                authority,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(artifact);
+        artificer.Setup(candidate => candidate.PutAsync(
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<Stream>(),
+                It.IsAny<IStagingMetadata>(),
+                It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("Redis unavailable"));
+
+        var service = new TrackingService(librarian.Object, artificer.Object);
+        var result = await service.TrackAsync(state, authority);
+
+        Assert.Equal(state.Id, result.Id);
+        librarian.Verify(candidate => candidate.PublishArtifactAsync(
+            It.IsAny<IKnowledgeDescriptor>(),
+            It.IsAny<IEnumerable<IKnowledgeRepresentation>>(),
+            null,
+            authority,
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
     public async Task GetHistoryAsync_ReturnsEveryObservationForRequestedSubject()
     {
         var librarian = new Mock<ILibrarian>();

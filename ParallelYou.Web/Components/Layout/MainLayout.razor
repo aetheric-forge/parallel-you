@@ -1,16 +1,20 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
 
-<div class="page">
-    <div class="sidebar">
+<div class="workspace-shell">
+    <aside class="sidebar">
         <NavMenu />
-    </div>
+    </aside>
 
-    <main>
-        <div class="top-row px-4">
+    <main class="workspace-main">
+        <header class="workspace-header">
+            <div class="workspace-context">
+                <span class="workspace-context__dot" aria-hidden="true"></span>
+                Private workspace
+            </div>
             <LoginWidget />
-        </div>
+        </header>
 
-        <article class="content px-4">
+        <article class="content workspace-content">
             @Body
         </article>
     </main>

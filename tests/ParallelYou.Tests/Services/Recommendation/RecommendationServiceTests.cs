@@ -13,7 +13,7 @@ public class RecommendationServiceTests : TestBase
     public async Task RecommendAsync_ShouldReturnEmptyListInitially()
     {
         // Arrange
-        var service = new RecommendationService(MockLibrarian.Object);
+        var service = new RecommendationService(MockLibrarian.Object, MockArtificer.Object);
         var subject = "Test Subject";
 
         // Act
@@ -27,7 +27,7 @@ public class RecommendationServiceTests : TestBase
     public async Task RecommendAsync_WithEmptySubject_ShouldReturnEmptyList()
     {
         // Arrange
-        var service = new RecommendationService(MockLibrarian.Object);
+        var service = new RecommendationService(MockLibrarian.Object, MockArtificer.Object);
         var subject = string.Empty;
 
         // Act
@@ -41,7 +41,7 @@ public class RecommendationServiceTests : TestBase
     public async Task RecommendAsync_WithNullSubject_ShouldReturnEmptyList()
     {
         // Arrange
-        var service = new RecommendationService(MockLibrarian.Object);
+        var service = new RecommendationService(MockLibrarian.Object, MockArtificer.Object);
         string? subject = null;
 
         // Act

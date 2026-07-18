@@ -13,6 +13,9 @@ using AethericForge.Runtime.Abstractions.Interfaces.Knowledge.Providers;
 using AethericForge.Runtime.Abstractions.Interfaces.Knowledge.Services;
 using AethericForge.Runtime.Abstractions.Interfaces.Library.Services;
 using AethericForge.Runtime.Abstractions.Interfaces.Post.Services;
+using AethericForge.Runtime.Abstractions.Interfaces.Staging.Providers;
+using AethericForge.Runtime.Abstractions.Interfaces.Staging.Services;
+using AethericForge.Runtime.Abstractions.Interfaces.Workbench.Services;
 using AethericForge.Runtime.Institutions.Abstractions.Builders;
 using AethericForge.Runtime.Institutions.Abstractions.Composition;
 using AethericForge.Runtime.Institutions.Abstractions.Models;
@@ -22,12 +25,14 @@ using AethericForge.Runtime.Institutions.Campus;
 using AethericForge.Runtime.Institutions.Library;
 using AethericForge.Runtime.Institutions.PostOffice;
 using AethericForge.Runtime.Institutions.Registry;
+using AethericForge.Runtime.Institutions.Workbench;
 using AethericForge.Runtime.Models.Archive.Serialization;
 using AethericForge.Runtime.Models.Authorities;
 using AethericForge.Runtime.Models.Identity.Primitives;
 using AethericForge.Runtime.Providers.Archive.InMemory;
 using AethericForge.Runtime.Providers.Identity.InMemory;
 using AethericForge.Runtime.Providers.Knowledge.InMemory;
+using AethericForge.Runtime.Providers.Staging.InMemory;
 using AethericForge.Runtime.Services.Archive;
 using AethericForge.Runtime.Services.Identity;
 using AethericForge.Runtime.Services.Identity.Lifecycle;
@@ -35,6 +40,8 @@ using AethericForge.Runtime.Services.Knowledge;
 using AethericForge.Runtime.Services.Library;
 using AethericForge.Runtime.Services.Post;
 using AethericForge.Runtime.Services.Registry;
+using AethericForge.Runtime.Services.Staging;
+using AethericForge.Runtime.Services.Workbench;
 
 namespace ParallelYou.Web.Hosting;
 
@@ -70,27 +77,18 @@ public static class ForgeCampusExtensions
                 .With<IRegistrar, Registrar>()
                 .With<IRegistryContext, RegistryContext>()
                 .With<IRegistry, Registry>()
-                .With<IArchiveService, ArchiveService>()
-                .With<IArchiveProvider>(_ => new InMemoryArchiveProvider("InMemory"))
-                .With<IArchiveSerializer, JsonArchiveSerializer>()
-                .With<IArchiveVault, ArchiveVault>()
-                .With<ITeam<IArchiveClerk>>(_ => new Team<IArchiveClerk>(Array.Empty<IArchiveClerk>()))
-                .With<IArchivist, Archivist>()
-                .With<IArchiveContext, ArchiveContext>()
-                .With<IArchive, Archive>()
-                .With<IPostExchange, PostExchange>()
-                .With<IPostService, PostService>()
-                .With<ITeam<IPostClerk>>(_ => new Team<IPostClerk>(Array.Empty<IPostClerk>()))
-                .With<IPostmaster, Postmaster>()
-                .With<IPostOfficeContext, PostOfficeContext>()
-                .With<IPostOffice, PostOffice>()
                 .With<IKnowledgeProvider>(_ => new InMemoryKnowledgeProvider("InMemory"))
                 .With<IKnowledgeService, KnowledgeService>()
                 .With<ITeam<ICuratorClerk>>(_ => new Team<ICuratorClerk>(Array.Empty<ICuratorClerk>()))
                 .With<ICurator, Curator>()
                 .With<ILibraryService, LibraryService>()
                 .With<ITeam<ILibraryClerk>>(_ => new Team<ILibraryClerk>(Array.Empty<ILibraryClerk>()))
-                .With<ILibrarian, Librarian>();
+                .With<ILibrarian, Librarian>()
+                .With<IStagingProvider>(_ => new InMemoryStagingProvider("InMemory"))
+                .With<IStagingService, StagingService>()
+                .With<ITeam<IWorkbenchWorker>>(_ => new Team<IWorkbenchWorker>(Array.Empty<IWorkbenchWorker>()))
+                .With<IArtificer, Artificer>()
+                .With<IWorkbenchService, WorkbenchService>();            
         });
 
         services.AddScoped<ICaptureService, CaptureService>();
@@ -105,15 +103,12 @@ public static class ForgeCampusExtensions
             var registryTemplate = campusTemplate with { Descriptor = new InstitutionDescriptor("Registry", campusTemplate.Descriptor.Version, "Registry institution") };
             campus.Register<IRegistry>(ActivatorUtilities.CreateInstance<Registry>(serviceProvider, new RegistryContext(registryTemplate, serviceProvider, campus)));
             
-            var archiveTemplate = campusTemplate with { Descriptor = new InstitutionDescriptor("Archive", campusTemplate.Descriptor.Version, "Archive institution") };
-            campus.Register<IArchive>(ActivatorUtilities.CreateInstance<Archive>(serviceProvider, new ArchiveContext(archiveTemplate, serviceProvider, campus)));
-            
-            var postOfficeTemplate = campusTemplate with { Descriptor = new InstitutionDescriptor("PostOffice", campusTemplate.Descriptor.Version, "PostOffice institution") };
-            campus.Register<IPostOffice>(ActivatorUtilities.CreateInstance<PostOffice>(serviceProvider, new PostOfficeContext(postOfficeTemplate, serviceProvider, campus)));
-            
             var libraryTemplate = campusTemplate with { Descriptor = new InstitutionDescriptor("Library", campusTemplate.Descriptor.Version, "Library institution") };
             campus.Register<ILibrary>(ActivatorUtilities.CreateInstance<Library>(serviceProvider, new LibraryContext(libraryTemplate, serviceProvider, campus)));
 
+            var workbenchTemplate = campusTemplate with { Descriptor = new InstitutionDescriptor("Workbench", campusTemplate.Descriptor.Version, "Workbench institution") };
+            campus.Register<ILibrary>(ActivatorUtilities.CreateInstance<Library>(serviceProvider, new WorkbenchContext(workbenchTemplate, serviceProvider, campus)));
+            
             return campus;
         });
 

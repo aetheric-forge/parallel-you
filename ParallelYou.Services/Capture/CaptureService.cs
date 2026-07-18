@@ -1,5 +1,6 @@
 using System.Text;
 using AethericForge.Runtime.Abstractions.Interfaces.Knowledge.Artifacts;
+using AethericForge.Runtime.Abstractions.Interfaces.Knowledge.Authorities;
 using AethericForge.Runtime.Abstractions.Interfaces.Library.Services;
 using AethericForge.Runtime.Models.Knowledge.Primitives;
 using AethericForge.Runtime.Models.Knowledge.Representations;
@@ -9,16 +10,24 @@ namespace ParallelYou.Services.Capture;
 
 public class CaptureService(ILibrarian librarian) : ServiceBase, ICaptureService
 {
-    public async Task<IKnowledgeArtifact> CaptureAsync(ICaptureEvidence evidence, CancellationToken cancellationToken = default)
+    public async Task<IKnowledgeArtifact> CaptureAsync(
+        ICaptureEvidence evidence,
+        IKnowledgeAuthority authority,
+        CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(evidence);
+        ArgumentNullException.ThrowIfNull(authority);
         
         var descriptor = new KnowledgeDescriptor(evidence.Title);
         var representation = new KnowledgeRepresentation("application/octet-stream",
             evidence.Content.Length, 
             async _ => await Task.FromResult(new MemoryStream(Encoding.UTF8.GetBytes(evidence.Content)))
         );
-        var artifact = await librarian.PublishArtifactAsync(descriptor, [representation], ct: cancellationToken);
+        var artifact = await librarian.PublishArtifactAsync(
+            descriptor,
+            [representation],
+            authority: authority,
+            ct: cancellationToken);
         
         return artifact;
     }

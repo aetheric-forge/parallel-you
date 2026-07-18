@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
@@ -24,13 +25,14 @@ public static class ForgeAuthenticationExtensions
             {
                 options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
                 options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
             })
             .AddCookie(options =>
             {
                 options.Cookie.HttpOnly = true;
                 options.Cookie.SameSite = SameSiteMode.Lax;
                 options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+                options.LoginPath = "/account/login";
                 options.SlidingExpiration = true;
             })
             .AddOpenIdConnect(options =>
@@ -50,7 +52,12 @@ public static class ForgeAuthenticationExtensions
                 options.Events.OnTokenValidated = RegisterPrincipalAsync;
             });
 
-        services.AddAuthorization();
+        services.AddAuthorization(options =>
+        {
+            options.FallbackPolicy = new AuthorizationPolicyBuilder()
+                .RequireAuthenticatedUser()
+                .Build();
+        });
         services.AddCascadingAuthenticationState();
 
         return services;
@@ -59,13 +66,24 @@ public static class ForgeAuthenticationExtensions
     public static IEndpointRouteBuilder MapForgeCampusAuthentication(
         this IEndpointRouteBuilder endpoints)
     {
-        endpoints.MapPost("/account/login", LoginAsync);
+        endpoints.MapGet("/account/login", Login)
+            .AllowAnonymous();
+        endpoints.MapPost("/account/login", LoginFromFormAsync)
+            .AllowAnonymous();
         endpoints.MapPost("/account/logout", LogoutAsync);
 
         return endpoints;
     }
 
-    private static async Task<IResult> LoginAsync(
+    private static IResult Login(HttpContext context)
+    {
+        var returnUrl = GetSafeReturnUrl(
+            context.Request.Query["ReturnUrl"].ToString());
+
+        return ChallengeOpenIdConnect(returnUrl);
+    }
+
+    private static async Task<IResult> LoginFromFormAsync(
         HttpContext context,
         IAntiforgery antiforgery,
         CancellationToken cancellationToken)
@@ -74,6 +92,11 @@ public static class ForgeAuthenticationExtensions
         var form = await context.Request.ReadFormAsync(cancellationToken);
         var returnUrl = GetSafeReturnUrl(form["returnUrl"].ToString());
 
+        return ChallengeOpenIdConnect(returnUrl);
+    }
+
+    private static IResult ChallengeOpenIdConnect(string returnUrl)
+    {
         return Results.Challenge(
             new AuthenticationProperties
             {
@@ -155,7 +178,8 @@ public static class ForgeAuthenticationExtensions
     {
         if (string.IsNullOrWhiteSpace(returnUrl) ||
             !returnUrl.StartsWith('/') ||
-            returnUrl.StartsWith("//", StringComparison.Ordinal))
+            (returnUrl.Length > 1 &&
+             (returnUrl[1] == '/' || returnUrl[1] == '\\')))
         {
             return "/";
         }

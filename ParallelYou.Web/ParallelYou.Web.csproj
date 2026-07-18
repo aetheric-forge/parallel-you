@@ -18,6 +18,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\ParallelYou.Abstractions\ParallelYou.Abstractions.csproj" />
+      <ProjectReference Include="..\ParallelYou.Models\ParallelYou.Models.csproj" />
       <ProjectReference Include="..\ParallelYou.Services\ParallelYou.Services.csproj" />
       <ProjectReference Include="..\runtime\src\Institutions\AethericForge.Runtime.Institutions.Campus\AethericForge.Runtime.Institutions.Campus.csproj" />
       <ProjectReference Include="..\runtime\src\Providers\AethericForge.Runtime.Providers.Archive.InMemory\AethericForge.Runtime.Providers.Archive.InMemory.csproj" />

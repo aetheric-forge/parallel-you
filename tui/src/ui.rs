@@ -4,9 +4,9 @@ use ratatui::{
     widgets::{Block, Borders, Paragraph},
 };
 
-use crate::app::App;
+use crate::app::{App, View};
 
-pub fn render(frame: &mut Frame, _app: &App) {
+pub fn render(frame: &mut Frame, app: &App) {
     let areas = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
@@ -16,22 +16,33 @@ pub fn render(frame: &mut Frame, _app: &App) {
         ])
         .split(frame.area());
 
-    let header = Paragraph::new("Parallel You")
+    let header = Paragraph::new("1 Library   2 Post Office")
         .alignment(Alignment::Center)
         .block(
             Block::default()
-                .title(" Aetheric Forge ")
+                .title(" Parallel You ")
                 .borders(Borders::ALL),
         );
 
-    let workspace = Paragraph::new(
-        "Abstract application shell\n\n\
-         Archives · Staging · Library · Post Office",
-    )
-    .alignment(Alignment::Center)
-    .block(Block::default().title(" Workspace ").borders(Borders::ALL));
+    let workspace = match app.view {
+        View::Library => Paragraph::new(
+            "MongoDB Library\n\n\
+             Provider not connected.",
+        )
+        .block(Block::default().title(" Library ").borders(Borders::ALL)),
 
-    let footer = Paragraph::new("q / Esc: quit")
+        View::PostOffice => Paragraph::new(
+            "RabbitMQ Post Office\n\n\
+             Provider not connected.",
+        )
+        .block(
+            Block::default()
+                .title(" Post Office ")
+                .borders(Borders::ALL),
+        ),
+    };
+
+    let footer = Paragraph::new("1/2 or Tab: switch   q/Esc: quit")
         .alignment(Alignment::Center)
         .block(Block::default().borders(Borders::ALL));
 

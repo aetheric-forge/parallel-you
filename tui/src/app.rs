@@ -5,8 +5,16 @@ use ratatui::DefaultTerminal;
 
 use crate::ui;
 
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub enum View {
+    #[default]
+    Library,
+    PostOffice,
+}
+
 #[derive(Debug, Default)]
 pub struct App {
+    pub view: View,
     should_quit: bool,
 }
 
@@ -29,9 +37,7 @@ impl App {
             Event::Key(key) if key.kind == KeyEventKind::Press => {
                 self.handle_key_event(key);
             }
-            Event::Resize(_, _) => {
-                // Ratatui redraws using the new frame area on the next loop.
-            }
+            Event::Resize(_, _) => {}
             _ => {}
         }
 
@@ -40,12 +46,18 @@ impl App {
 
     fn handle_key_event(&mut self, key: KeyEvent) {
         match key.code {
-            KeyCode::Char('q') | KeyCode::Esc => self.quit(),
+            KeyCode::Char('1') => self.view = View::Library,
+            KeyCode::Char('2') => self.view = View::PostOffice,
+            KeyCode::Tab => self.toggle_view(),
+            KeyCode::Char('q') | KeyCode::Esc => self.should_quit = true,
             _ => {}
         }
     }
 
-    fn quit(&mut self) {
-        self.should_quit = true;
+    fn toggle_view(&mut self) {
+        self.view = match self.view {
+            View::Library => View::PostOffice,
+            View::PostOffice => View::Library,
+        };
     }
 }

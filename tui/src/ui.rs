@@ -25,24 +25,32 @@ pub fn render(frame: &mut Frame, app: &App) {
         );
 
     let workspace = match app.view {
-        View::Library => Paragraph::new(
-            "MongoDB Library\n\n\
-             Provider not connected.",
-        )
-        .block(Block::default().title(" Library ").borders(Borders::ALL)),
+        View::Library => {
+            let content = format!(
+                "Provider: {}\nStatus: {}",
+                app.library_name(),
+                app.library_status(),
+            );
 
-        View::PostOffice => Paragraph::new(
-            "RabbitMQ Post Office\n\n\
-             Provider not connected.",
-        )
-        .block(
-            Block::default()
-                .title(" Post Office ")
-                .borders(Borders::ALL),
-        ),
+            Paragraph::new(content).block(Block::default().title(" Library ").borders(Borders::ALL))
+        }
+
+        View::PostOffice => {
+            let content = format!(
+                "Provider: {}\nStatus: {}",
+                app.post_office_name(),
+                app.post_office_status(),
+            );
+
+            Paragraph::new(content).block(
+                Block::default()
+                    .title(" Post Office ")
+                    .borders(Borders::ALL),
+            )
+        }
     };
 
-    let footer = Paragraph::new("1/2 or Tab: switch   q/Esc: quit")
+    let footer = Paragraph::new("1/2 or Tab: switch   r: refresh   q/Esc: quit")
         .alignment(Alignment::Center)
         .block(Block::default().borders(Borders::ALL));
 

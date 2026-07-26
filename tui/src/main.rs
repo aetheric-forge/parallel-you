@@ -7,8 +7,15 @@ use std::io;
 use app::App;
 use providers::{library::InMemoryLibraryProvider, post_office::InMemoryPostOfficeProvider};
 
-fn main() -> io::Result<()> {
-    let app = App::new(InMemoryLibraryProvider, InMemoryPostOfficeProvider);
+#[tokio::main]
+async fn main() -> io::Result<()> {
+    let app = App::new(InMemoryLibraryProvider, InMemoryPostOfficeProvider).await;
 
-    ratatui::run(|terminal| app.run(terminal))
+    let mut terminal = ratatui::init();
+
+    let result = app.run(&mut terminal).await;
+
+    ratatui::restore();
+
+    result
 }

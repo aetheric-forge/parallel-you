@@ -1,21 +1,24 @@
-use std::error::Error;
+use async_trait::async_trait;
 
-pub type ProviderResult<T> = Result<T, Box<dyn Error + Send + Sync>>;
+use super::ProviderResult;
 
-pub trait PostOfficeProvider {
+#[async_trait]
+pub trait PostOfficeProvider: Send + Sync {
     fn name(&self) -> &'static str;
-    fn health_check(&self) -> ProviderResult<()>;
+
+    async fn health_check(&self) -> ProviderResult<()>;
 }
 
 #[derive(Debug, Default)]
 pub struct InMemoryPostOfficeProvider;
 
+#[async_trait]
 impl PostOfficeProvider for InMemoryPostOfficeProvider {
     fn name(&self) -> &'static str {
         "In-Memory Post Office"
     }
 
-    fn health_check(&self) -> ProviderResult<()> {
+    async fn health_check(&self) -> ProviderResult<()> {
         Ok(())
     }
 }

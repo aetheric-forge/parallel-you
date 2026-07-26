@@ -1,7 +1,9 @@
-use std::fmt;
+use std::{error::Error, fmt};
 
 pub mod library;
 pub mod post_office;
+
+pub type ProviderResult<T> = Result<T, Box<dyn Error + Send + Sync>>;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ProviderStatus {
@@ -10,7 +12,7 @@ pub enum ProviderStatus {
 }
 
 impl ProviderStatus {
-    pub fn from_result(result: Result<(), Box<dyn std::error::Error + Send + Sync>>) -> Self {
+    pub fn from_result(result: ProviderResult<()>) -> Self {
         match result {
             Ok(()) => Self::Available,
             Err(error) => Self::Unavailable(error.to_string()),
@@ -21,8 +23,8 @@ impl ProviderStatus {
 impl fmt::Display for ProviderStatus {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            ProviderStatus::Available => write!(formatter, "Available"),
-            ProviderStatus::Unavailable(error) => {
+            Self::Available => write!(formatter, "Available"),
+            Self::Unavailable(error) => {
                 write!(formatter, "Unavailable: {error}")
             }
         }

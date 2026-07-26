@@ -1,21 +1,24 @@
-use std::error::Error;
+use async_trait::async_trait;
 
-pub type ProviderResult<T> = Result<T, Box<dyn Error + Send + Sync>>;
+use super::ProviderResult;
 
-pub trait LibraryProvider {
+#[async_trait]
+pub trait LibraryProvider: Send + Sync {
     fn name(&self) -> &'static str;
-    fn health_check(&self) -> ProviderResult<()>;
+
+    async fn health_check(&self) -> ProviderResult<()>;
 }
 
 #[derive(Debug, Default)]
 pub struct InMemoryLibraryProvider;
 
+#[async_trait]
 impl LibraryProvider for InMemoryLibraryProvider {
     fn name(&self) -> &'static str {
         "In-Memory Library"
     }
 
-    fn health_check(&self) -> ProviderResult<()> {
+    async fn health_check(&self) -> ProviderResult<()> {
         Ok(())
     }
 }

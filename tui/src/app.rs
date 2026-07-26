@@ -27,7 +27,7 @@ pub struct App {
 }
 
 impl App {
-    pub fn new(
+    pub async fn new(
         library: impl LibraryProvider + 'static,
         post_office: impl PostOfficeProvider + 'static,
     ) -> Self {
@@ -40,20 +40,21 @@ impl App {
             post_office_status: ProviderStatus::Unavailable("Not checked".to_string()),
         };
 
-        app.refresh_provider_status();
+        app.refresh_provider_status().await;
         app
     }
 
-    fn refresh_provider_status(&mut self) {
-        self.library_status = ProviderStatus::from_result(self.library.health_check());
+    async fn refresh_provider_status(&mut self) {
+        self.library_status = ProviderStatus::from_result(self.library.health_check().await);
 
-        self.post_office_status = ProviderStatus::from_result(self.post_office.health_check());
+        self.post_office_status =
+            ProviderStatus::from_result(self.post_office.health_check().await);
     }
 
-    pub fn run(mut self, terminal: &mut DefaultTerminal) -> io::Result<()> {
+    pub async fn run(mut self, terminal: &mut DefaultTerminal) -> io::Result<()> {
         while !self.should_quit {
             terminal.draw(|frame| ui::render(frame, &self))?;
-            self.handle_events()?;
+            self.handle_events().await?;
         }
 
         Ok(())
@@ -75,10 +76,10 @@ impl App {
         self.post_office.name()
     }
 
-    fn handle_events(&mut self) -> io::Result<()> {
+    async fn handle_events(&mut self) -> io::Result<()> {
         match event::read()? {
             Event::Key(key) if key.kind == KeyEventKind::Press => {
-                self.handle_key_event(key);
+                self.handle_key_event(key).await;
             }
             Event::Resize(_, _) => {}
             _ => {}
@@ -87,13 +88,15 @@ impl App {
         Ok(())
     }
 
-    fn handle_key_event(&mut self, key: KeyEvent) {
+    async fn handle_key_event(&mut self, key: KeyEvent) {
         match key.code {
             KeyCode::Char('1') => self.view = View::Library,
             KeyCode::Char('2') => self.view = View::PostOffice,
             KeyCode::Tab => self.toggle_view(),
-            KeyCode::Char('r') => self.refresh_provider_status(),
-            KeyCode::Char('q') | KeyCode::Esc => self.should_quit = true,
+            KeyCode::Char('r') => self.refresh_provider_status().await,
+            KeyCode::Char('q') | KeyCode::Esc => {
+                self.should_quit = true;
+            }
             _ => {}
         }
     }

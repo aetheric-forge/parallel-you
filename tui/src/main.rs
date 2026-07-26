@@ -5,7 +5,10 @@ mod ui;
 use std::io;
 
 use app::App;
-use providers::{library::MongoLibraryProvider, post_office::InMemoryPostOfficeProvider};
+use providers::{
+    library::MongoLibraryProvider,
+    post_office::RabbitMqPostOfficeProvider,
+};
 
 #[tokio::main]
 async fn main() -> io::Result<()> {
@@ -13,7 +16,14 @@ async fn main() -> io::Result<()> {
         .await
         .map_err(|error| io::Error::other(error.to_string()))?;
 
-    let app = App::new(library, InMemoryPostOfficeProvider).await;
+    let post_office =
+        RabbitMqPostOfficeProvider::from_env()
+        .await
+        .map_err(|error| {
+            io::Error::other(error.to_string())
+        })?;
+
+    let app = App::new(library, post_office).await;
 
     let mut terminal = ratatui::init();
 

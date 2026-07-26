@@ -8,6 +8,8 @@ use crate::{
     ui,
 };
 
+use crate::providers::ProviderStatus;
+
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub enum View {
     #[default]
@@ -20,8 +22,8 @@ pub struct App {
     should_quit: bool,
     library: Box<dyn LibraryProvider>,
     post_office: Box<dyn PostOfficeProvider>,
-    library_status: String,
-    post_office_status: String,
+    library_status: ProviderStatus,
+    post_office_status: ProviderStatus,
 }
 
 impl App {
@@ -34,12 +36,18 @@ impl App {
             should_quit: false,
             library: Box::new(library),
             post_office: Box::new(post_office),
-            library_status: String::new(),
-            post_office_status: String::new(),
+            library_status: ProviderStatus::Unavailable("Not checked".to_string()),
+            post_office_status: ProviderStatus::Unavailable("Not checked".to_string()),
         };
 
         app.refresh_provider_status();
         app
+    }
+
+    fn refresh_provider_status(&mut self) {
+        self.library_status = ProviderStatus::from_result(self.library.health_check());
+
+        self.post_office_status = ProviderStatus::from_result(self.post_office.health_check());
     }
 
     pub fn run(mut self, terminal: &mut DefaultTerminal) -> io::Result<()> {
@@ -55,16 +63,16 @@ impl App {
         self.library.name()
     }
 
-    pub fn library_status(&self) -> &str {
+    pub fn library_status(&self) -> &ProviderStatus {
         &self.library_status
+    }
+
+    pub fn post_office_status(&self) -> &ProviderStatus {
+        &self.post_office_status
     }
 
     pub fn post_office_name(&self) -> &'static str {
         self.post_office.name()
-    }
-
-    pub fn post_office_status(&self) -> &str {
-        &self.post_office_status
     }
 
     fn handle_events(&mut self) -> io::Result<()> {
@@ -94,18 +102,6 @@ impl App {
         self.view = match self.view {
             View::Library => View::PostOffice,
             View::PostOffice => View::Library,
-        };
-    }
-
-    fn refresh_provider_status(&mut self) {
-        self.library_status = match self.library.health_check() {
-            Ok(()) => "Available".to_string(),
-            Err(error) => format!("Unavailable: {error}"),
-        };
-
-        self.post_office_status = match self.post_office.health_check() {
-            Ok(()) => "Available".to_string(),
-            Err(error) => format!("Unavailable: {error}"),
         };
     }
 }

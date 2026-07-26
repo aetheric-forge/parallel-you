@@ -5,11 +5,15 @@ mod ui;
 use std::io;
 
 use app::App;
-use providers::{library::InMemoryLibraryProvider, post_office::InMemoryPostOfficeProvider};
+use providers::{library::MongoLibraryProvider, post_office::InMemoryPostOfficeProvider};
 
 #[tokio::main]
 async fn main() -> io::Result<()> {
-    let app = App::new(InMemoryLibraryProvider, InMemoryPostOfficeProvider).await;
+    let library = MongoLibraryProvider::from_env()
+        .await
+        .map_err(|error| io::Error::other(error.to_string()))?;
+
+    let app = App::new(library, InMemoryPostOfficeProvider).await;
 
     let mut terminal = ratatui::init();
 

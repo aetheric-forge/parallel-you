@@ -1,9 +1,9 @@
-@page "/captures"
+@page "/parallel-you/captures"
 @rendermode InteractiveServer
 @using System.Text
 @using AethericForge.Runtime.Abstractions.Interfaces.Knowledge.Artifacts
 @using AethericForge.Runtime.Models.Knowledge.Authorities
-@using ParallelYou.Abstractions.Capture
+@using global::ParallelYou.Abstractions.Capture
 @using ParallelYou.Web.Authentication
 @inject ICaptureService CaptureService
 @inject ICurrentIdentityAccessor CurrentIdentity
@@ -18,7 +18,7 @@
             <h1>Your captures</h1>
             <p>Original expressions, preserved without pretending they mean more than they do.</p>
         </div>
-        <a class="btn btn-primary" href="/capture">New capture</a>
+        <a class="btn btn-primary" href="/parallel-you/capture">New capture</a>
     </header>
 
     @if (isLoading)
@@ -36,7 +36,7 @@
         <div class="captures-empty">
             <h2>Nothing captured yet</h2>
             <p>When something is worth keeping, put it here before it escapes.</p>
-            <a class="btn btn-outline-primary" href="/capture">Capture something</a>
+            <a class="btn btn-outline-primary" href="/parallel-you/capture">Capture something</a>
         </div>
     }
     else

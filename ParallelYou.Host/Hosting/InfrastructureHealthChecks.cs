@@ -3,9 +3,9 @@ using MongoDB.Bson;
 using MongoDB.Driver;
 using StackExchange.Redis;
 
-namespace ParallelYou.Web.Hosting;
+namespace ParallelYou.Host.Hosting;
 
-public sealed class MongoDbHealthCheck(IMongoDatabase database) : IHealthCheck
+public sealed class MongoDbHealthCheck([Microsoft.Extensions.DependencyInjection.FromKeyedServices("ParallelYou")] IMongoDatabase database) : IHealthCheck
 {
     public async Task<HealthCheckResult> CheckHealthAsync(
         HealthCheckContext context,
@@ -19,7 +19,7 @@ public sealed class MongoDbHealthCheck(IMongoDatabase database) : IHealthCheck
     }
 }
 
-public sealed class RedisHealthCheck(IConnectionMultiplexer redis) : IHealthCheck
+public sealed class RedisHealthCheck([Microsoft.Extensions.DependencyInjection.FromKeyedServices("Workbench")] IConnectionMultiplexer redis) : IHealthCheck
 {
     public async Task<HealthCheckResult> CheckHealthAsync(
         HealthCheckContext context,

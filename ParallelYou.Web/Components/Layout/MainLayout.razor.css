@@ -6,6 +6,12 @@
     background: var(--py-canvas);
 }
 
+.institution-nav-collapse {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
 .workspace-main {
     flex: 1;
     min-width: 0;
@@ -73,12 +79,47 @@
         height: 100vh;
         position: sticky;
         top: 0;
+        transition: width 180ms ease, flex-basis 180ms ease;
     }
 
     .workspace-header {
         position: sticky;
         top: 0;
         z-index: 10;
+    }
+
+    .institution-nav-collapse:checked + .sidebar {
+        width: 4.75rem;
+        flex-basis: 4.75rem;
+    }
+
+    .institution-nav-collapse:checked + .sidebar ::deep .brand-row {
+        padding-inline: 1.35rem;
+    }
+
+    .institution-nav-collapse:checked + .sidebar ::deep .brand-name,
+    .institution-nav-collapse:checked + .sidebar ::deep .nav-group__label,
+    .institution-nav-collapse:checked + .sidebar ::deep .nav-link span:last-child,
+    .institution-nav-collapse:checked + .sidebar ::deep .nav-note,
+    .institution-nav-collapse:checked + .sidebar ::deep .brand {
+        display: none;
+    }
+
+    .institution-nav-collapse:checked + .sidebar ::deep .sidebar-collapser {
+        transform: rotate(180deg);
+    }
+
+    .institution-nav-collapse:checked + .sidebar ::deep .nav-scrollable {
+        padding-inline: .65rem;
+    }
+
+    .institution-nav-collapse:checked + .sidebar ::deep .nav-groups {
+        gap: .5rem;
+    }
+
+    .institution-nav-collapse:checked + .sidebar ::deep .nav-link {
+        justify-content: center;
+        padding-inline: .45rem;
     }
 }
 

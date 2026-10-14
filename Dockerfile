@@ -6,8 +6,8 @@ ARG VERSION=1.0.0
 WORKDIR /src
 
 COPY . .
-RUN dotnet restore ParallelYou.Web/ParallelYou.Web.csproj
-RUN dotnet publish ParallelYou.Web/ParallelYou.Web.csproj \
+RUN dotnet restore ParallelYou.Host/ParallelYou.Host.csproj
+RUN dotnet publish ParallelYou.Host/ParallelYou.Host.csproj \
     --configuration ${BUILD_CONFIGURATION} \
     --no-restore \
     --output /app/publish \
@@ -29,4 +29,4 @@ ENV ASPNETCORE_HTTP_PORTS=8080
 EXPOSE 8080
 USER $APP_UID
 
-ENTRYPOINT ["dotnet", "ParallelYou.Web.dll"]
+ENTRYPOINT ["dotnet", "ParallelYou.Host.dll"]

@@ -1,14 +1,14 @@
-@page "/reflect"
+@page "/parallel-you/reflect"
 @rendermode InteractiveServer
 @using System.ComponentModel.DataAnnotations
 @using System.Text
 @using AethericForge.Runtime.Abstractions.Interfaces.Knowledge.Artifacts
 @using AethericForge.Runtime.Abstractions.Interfaces.Knowledge.Primitives
 @using AethericForge.Runtime.Models.Knowledge.Authorities
-@using ParallelYou.Abstractions
-@using ParallelYou.Abstractions.Capture
-@using ParallelYou.Abstractions.Reflection
-@using ParallelYou.Models.Reflection
+@using global::ParallelYou.Abstractions
+@using global::ParallelYou.Abstractions.Capture
+@using global::ParallelYou.Abstractions.Reflection
+@using global::ParallelYou.Models.Reflection
 @using ParallelYou.Web.Authentication
 @inject ICaptureService CaptureService
 @inject IReflectionService ReflectionService
@@ -40,7 +40,7 @@
         <div class="reflect-empty">
             <h2>Reflection needs something to examine</h2>
             <p>Capture an expression first; it will remain distinct from whatever you later make of it.</p>
-            <a class="btn btn-primary" href="/capture">Create a capture</a>
+            <a class="btn btn-primary" href="/parallel-you/capture">Create a capture</a>
         </div>
     }
     else

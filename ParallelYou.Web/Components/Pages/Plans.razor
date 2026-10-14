@@ -1,11 +1,11 @@
-@page "/plans"
+@page "/parallel-you/plans"
 @rendermode InteractiveServer
 @using System.ComponentModel.DataAnnotations
 @using AethericForge.Runtime.Models.Knowledge.Authorities
-@using ParallelYou.Abstractions
-@using ParallelYou.Abstractions.Intention
-@using ParallelYou.Abstractions.Plan
-@using ParallelYou.Models.Plan
+@using global::ParallelYou.Abstractions
+@using global::ParallelYou.Abstractions.Intention
+@using global::ParallelYou.Abstractions.Plan
+@using global::ParallelYou.Models.Plan
 @using ParallelYou.Web.Authentication
 @inject IPlanningService PlanningService
 @inject IIntentionService IntentionService
@@ -44,7 +44,7 @@
             {
                 <div class="intentions-needed">
                     <p>A Plan must serve at least one adopted Intention.</p>
-                    <a class="btn btn-outline-primary" href="/intentions">Review intentions</a>
+                    <a class="btn btn-outline-primary" href="/parallel-you/intentions">Review intentions</a>
                 </div>
             }
             else

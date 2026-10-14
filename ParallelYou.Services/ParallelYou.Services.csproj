@@ -1,9 +1,10 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
     <ProjectReference Include="..\ParallelYou.Abstractions\ParallelYou.Abstractions.csproj" />
     <ProjectReference Include="..\ParallelYou.Models\ParallelYou.Models.csproj" />
-    <ProjectReference Include="..\runtime\src\Institutions\AethericForge.Runtime.Institutions.Campus\AethericForge.Runtime.Institutions.Campus.csproj" />
+    <ProjectReference Include="..\runtime\src\Institutions\AethericForge.Runtime.Institutions.Abstractions\AethericForge.Runtime.Institutions.Abstractions.csproj" />
+    <ProjectReference Include="../runtime/src/Models/AethericForge.Runtime.Models/AethericForge.Runtime.Models.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

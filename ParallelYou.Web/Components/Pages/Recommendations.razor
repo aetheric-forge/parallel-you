@@ -1,11 +1,11 @@
-@page "/recommendations"
+@page "/parallel-you/recommendations"
 @rendermode InteractiveServer
 @using System.ComponentModel.DataAnnotations
 @using AethericForge.Runtime.Models.Knowledge.Authorities
-@using ParallelYou.Abstractions
-@using ParallelYou.Abstractions.Plan
-@using ParallelYou.Abstractions.Recommendation
-@using ParallelYou.Models.Recommendation
+@using global::ParallelYou.Abstractions
+@using global::ParallelYou.Abstractions.Plan
+@using global::ParallelYou.Abstractions.Recommendation
+@using global::ParallelYou.Models.Recommendation
 @using ParallelYou.Web.Authentication
 @inject IRecommendationService RecommendationService
 @inject IPlanningService PlanningService
@@ -44,7 +44,7 @@
             {
                 <div class="plans-needed">
                     <p>A Recommendation needs a Plan-scoped subject.</p>
-                    <a class="btn btn-outline-primary" href="/plans">Review Plans</a>
+                    <a class="btn btn-outline-primary" href="/parallel-you/plans">Review Plans</a>
                 </div>
             }
             else

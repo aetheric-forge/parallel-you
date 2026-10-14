@@ -1,112 +1,81 @@
 # Parallel You
 
-Parallel You is a private, actor-scoped record of observation, reflection, and direction. It preserves earlier representations instead of overwriting them, allowing a person to see what changed without pretending the current view was always inevitable.
+Parallel You is a private, actor-scoped record of observation, reflection, and direction. It preserves earlier representations instead of overwriting them. Its workflows cover capture, reflection, tracking, intentions, planning, and recommendations with explicit human response.
 
-The 1.0 workflow includes:
+This repository owns the institution implementation, reusable Blazor UI, provisioning definition, and standalone host. The completed module was imported from `aetheric-forge/aetheric-web` at `e2da89fd84f65b9f38e46aa0bd1a6969f7f5e5d3`. The previous standalone main (`81064ac`) is preserved by the annotated tag `archive/main-before-bootstrap-2026-10-14`.
 
-- capture and durable retrieval;
-- reflection with evidence and adopted insight;
-- observation tracking with preserved history;
-- intentions and plans with explicit adoption;
-- recommendations with human response and no implied authorization to execute.
+## Projects
 
-## Architecture
+| Project | Purpose |
+| --- | --- |
+| `ParallelYou.Abstractions` | Institution and workflow contracts |
+| `ParallelYou.Models` | Personal artifacts, representations, and submissions |
+| `ParallelYou.Services` | Reusable institution composition and workflow implementations |
+| `ParallelYou.Web` | Razor component library, authenticated identity access, and consumer configuration loading |
+| `ParallelYou.Host` | Standalone ASP.NET Core host with OIDC, persistent authentication keys, and readiness checks |
+| `tests/ParallelYou.Tests` | Workflow, isolation, provisioning, and host regression coverage |
 
-Parallel You is an ASP.NET Core Blazor Server application built on Aetheric Forge Runtime institutions and services.
+`ParallelYouModule.Create` accepts an institution context, a Librarian, and an Artificer. `AddParallelYouModule` exports its workflow services without replacing a host's shared Library or Workbench. The standalone host creates a dedicated Mongo knowledge provider and uses the provisioned parent Redis Workbench. Workflows store durable artifacts in the `knowledge` collection with the `parallel-you` scheme; they do not directly use Archive or S3.
 
-- Keycloak provides OpenID Connect authentication.
-- MongoDB is the durable archive and knowledge store.
-- Redis is a recoverable cache for current-artifact pointers.
-- Every domain artifact is scoped to the authenticated Forge identity and authority context.
-
-The `runtime` directory is a Git submodule. Clone with submodules enabled:
-
-```bash
-git clone --recurse-submodules https://github.com/aetheric-forge/parallel-you.git
-```
-
-For an existing clone:
-
-```bash
-git submodule update --init --recursive
-```
-
-## Configuration
-
-ASP.NET Core configuration supports JSON, environment variables, and user secrets. Environment-variable keys use double underscores, such as `MongoDb__Host`.
-
-| Key | Required | Purpose |
-| --- | --- | --- |
-| `Keycloak:Authority` | yes | Realm authority URL used by OpenID Connect |
-| `Keycloak:Realm` | yes | Keycloak realm used by Forge Authentication |
-| `Keycloak:ClientId` | yes | OIDC client identifier |
-| `Keycloak:ClientSecret` | yes | OIDC client secret |
-| `MongoDb:Host` | yes | MongoDB host |
-| `MongoDb:Port` | yes | MongoDB port |
-| `MongoDb:Username` | yes | Application database user |
-| `MongoDb:Password` | yes | Application database password |
-| `MongoDb:DatabaseName` | yes | Archive and knowledge database |
-| `MongoDb:AuthenticationDatabase` | yes | MongoDB authentication source |
-| `MongoDb:DirectConnection` | no | Direct topology selection; defaults to `true` |
-| `Redis:Host` | yes | Redis host |
-| `Redis:Port` | no | Redis port; defaults to `6379` |
-| `Redis:Password` | no | Redis password |
-| `Redis:Ssl` | no | Enables TLS; defaults to `false` |
-| `Redis:Database` | no | Logical database; defaults to `0` |
-
-Keep passwords and client secrets outside committed configuration. For local development, use the web project's configured user-secrets store.
+The runtime and primitives dependencies are public HTTPS Git submodules pinned to explicit commits. Neither an adjacent web checkout nor a moving runtime branch is required.
 
 ## Build and test
 
-The application targets .NET 10.
+Use .NET 10 and initialize dependencies:
 
 ```bash
-dotnet restore ParallelYou.sln
+git clone --recurse-submodules https://github.com/aetheric-forge/parallel-you.git
+cd parallel-you
+# For an existing checkout:
+git submodule update --init --recursive
+
 dotnet test ParallelYou.sln --configuration Release
-dotnet run --project ParallelYou.Web/ParallelYou.Web.csproj
+dotnet publish ParallelYou.Host/ParallelYou.Host.csproj --configuration Release --output .output/host
 ```
 
-The authenticated application is available at the URL reported by `dotnet run`. Operational endpoints are anonymous and intended for platform probes:
+Tests use in-memory providers and an OIDC discovery fixture; they do not need live MongoDB, Redis, or Keycloak. Readiness checks in a running deployment do check MongoDB and Redis.
 
-- `/health/live` reports process liveness.
-- `/health/ready` verifies MongoDB and Redis connectivity.
+## Bootstrap from Git
 
-## Container image
+Load these inputs with the existing provisioning Git loader:
 
-Build from the repository root so the runtime submodule is present in the build context:
+| Input | Value |
+| --- | --- |
+| Repository | `https://github.com/aetheric-forge/parallel-you` |
+| Revision | A reviewed tag or full commit SHA |
+| Definition path | `institution/parallel-you.yaml` |
+| Bindings path | `institution/parallel-you.bindings.yaml` |
+
+The bindings are an example. Select the actual database and parent Registrar/Workbench sources in the provisioning host. The loader resolves the revision to a commit before reading either file. Provisioning owns resource creation, the durable deployment record, and delivery of scoped consumer credentials. See [the bootstrap contract](docs/architecture/bootstrap.md).
+
+## Run the standalone host
+
+Mount the private consumer JSON produced by provisioning and configure the expected deployment:
 
 ```bash
-docker build \
-  --build-arg VERSION=1.0.0 \
-  --tag ghcr.io/aetheric-forge/parallel-you:1.0.0 \
-  --tag ghcr.io/aetheric-forge/parallel-you:latest \
-  .
+export ParallelYou__ProvisionedConfigurationPath=/run/secrets/parallel-you-consumer.json
+export ParallelYou__DeploymentId=<deployment-id-from-the-catalog>
+export ParallelYou__Environment=production
+export ParallelYou__ProtectionKeyDirectory=/var/lib/parallel-you/keys
+dotnet run --project ParallelYou.Host
 ```
 
-Push the immutable release tag and, if desired, the moving tag:
+`ParallelYou:PlanId` optionally pins the expected plan. The authentication key directory must persist across restarts and be writable by the host user. The browser client created by provisioning must register this host's `/signin-oidc` and `/signout-callback-oidc` URLs.
+
+Without an artifact, provide explicit `ParallelYou:MongoDb`, `Workbench:Redis`, and `Registry:Keycloak` configuration. Mongo requires Host, DatabaseName, Username and Password; provisioned users use AuthenticationDatabase `admin`. Redis requires Host and Password, with optional User, Port, Ssl and Database. Keycloak requires Authority (base URL), Realm, ClientId and ClientSecret. Credentials belong in their owning institution section; endpoint defaults may come from the corresponding platform section. The host never inherits platform/root credentials. Environment-variable keys use double underscores.
+
+The public landing page is `/parallel-you`; `/` redirects there. Every working page requires authentication. `/health/live` reports process liveness; `/health/ready` checks the module's Mongo database and parent Redis connection. Consumer configuration changes require a restart.
+
+## Container
+
+Initialize submodules before building:
 
 ```bash
-docker push ghcr.io/aetheric-forge/parallel-you:1.0.0
-docker push ghcr.io/aetheric-forge/parallel-you:latest
+docker build --tag parallel-you:bootstrap .
 ```
 
-The image:
+The container runs `ParallelYou.Host.dll` on port 8080 as the .NET application user. Mount the consumer artifact read-only and a writable persistent authentication-key directory, and supply the same deployment settings shown above.
 
-- uses the official .NET 10 SDK and ASP.NET Core runtime images;
-- publishes only the web application and its runtime dependencies;
-- runs as the non-root user supplied by the Microsoft runtime image;
-- listens for HTTP traffic on port `8080`.
+## Existing deployments
 
-## Deployment notes
-
-When running behind an ingress or reverse proxy, enable forwarded headers so OIDC constructs the public HTTPS callback URL:
-
-```text
-ASPNETCORE_FORWARDEDHEADERS_ENABLED=true
-```
-
-Persist ASP.NET Core Data Protection keys at `/home/app/.aspnet/DataProtection-Keys`. All replicas must share the same key ring or authentication cookies will not survive pod replacement and cannot move between replicas.
-
-Blazor Server circuits are instance-bound. Start with one replica or configure ingress session affinity before scaling horizontally.
-
-Treat MongoDB as durable state and back it up accordingly. Redis may be cleared or replaced; Parallel You reconstructs current pointers from durable MongoDB history.
+The host uses the scoped settings described above instead of the old unscoped `MongoDb`, `Redis`, and `Keycloak` credentials. Routes now live under `/parallel-you`. Before changing an existing deployment, verify its database, identity mapping, and stored Person IDs. Records previously published through the web host's shared ForgeCampus Librarian may be in that shared store. This repository update does not copy or migrate those records.

@@ -1,8 +1,6 @@
 [submodule "runtime"]
 	path = runtime
-	url = git@github.com:aetheric-forge/aetheric-runtime.git
-	branch = v2.1
-[submodule "aetheric-runtime"]
-	path = aetheric-runtime
-	url = git@github.com:aetheric-forge/aetheric-runtime.git
-	branch = v2.1
+	url = https://github.com/aetheric-forge/aetheric-runtime.git
+[submodule "primitives"]
+	path = primitives
+	url = https://github.com/aetheric-forge/primitives.git

@@ -1,35 +1,19 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
-
-    <PropertyGroup>
-        <TargetFramework>net10.0</TargetFramework>
-        <Version>1.0.0</Version>
-        <Nullable>enable</Nullable>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
-      <UserSecretsId>1d36fde4-2cc1-4d77-9b79-b38167abf440</UserSecretsId>
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
-
-    <ItemGroup>
-      <Folder Include="Hosting\" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="10.0.0" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <ProjectReference Include="..\ParallelYou.Abstractions\ParallelYou.Abstractions.csproj" />
-      <ProjectReference Include="..\ParallelYou.Models\ParallelYou.Models.csproj" />
-      <ProjectReference Include="..\ParallelYou.Services\ParallelYou.Services.csproj" />
-      <ProjectReference Include="..\runtime\src\Institutions\AethericForge.Runtime.Institutions.Campus\AethericForge.Runtime.Institutions.Campus.csproj" />
-      <ProjectReference Include="..\runtime\src\Providers\AethericForge.Runtime.Providers.Archive.MongoDb\AethericForge.Runtime.Providers.Archive.MongoDb.csproj" />
-      <ProjectReference Include="..\runtime\src\Providers\AethericForge.Runtime.Providers.Identity.Keycloak\AethericForge.Runtime.Providers.Identity.Keycloak.csproj" />
-      <ProjectReference Include="..\runtime\src\Providers\AethericForge.Runtime.Providers.Knowledge.MongoDb\AethericForge.Runtime.Providers.Knowledge.MongoDb.csproj" />
-      <ProjectReference Include="..\runtime\src\Providers\AethericForge.Runtime.Providers.Staging.Redis\AethericForge.Runtime.Providers.Staging.Redis.csproj" />
-      <ProjectReference Include="..\runtime\src\Services\AethericForge.Runtime.Services.Archive\AethericForge.Runtime.Services.Archive.csproj" />
-      <ProjectReference Include="..\runtime\src\Services\AethericForge.Runtime.Services.Knowledge\AethericForge.Runtime.Services.Knowledge.csproj" />
-      <ProjectReference Include="..\runtime\src\Services\AethericForge.Runtime.Services.Library\AethericForge.Runtime.Services.Library.csproj" />
-      <ProjectReference Include="..\runtime\src\Services\AethericForge.Runtime.Services.Staging\AethericForge.Runtime.Services.Staging.csproj" />
-    </ItemGroup>
-
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <ProjectReference Include="../ParallelYou.Services/ParallelYou.Services.csproj" />
+    <ProjectReference Include="../primitives/src/Primitives.MongoDb/Primitives.MongoDb.csproj" />
+    <ProjectReference Include="../primitives/src/Primitives.Redis/Primitives.Redis.csproj" />
+    <ProjectReference Include="../runtime/src/Providers/AethericForge.Runtime.Providers.Knowledge.MongoDb/AethericForge.Runtime.Providers.Knowledge.MongoDb.csproj" />
+    <ProjectReference Include="../runtime/src/Providers/AethericForge.Runtime.Providers.Staging.Redis/AethericForge.Runtime.Providers.Staging.Redis.csproj" />
+    <ProjectReference Include="../runtime/src/Services/AethericForge.Runtime.Services.Knowledge/AethericForge.Runtime.Services.Knowledge.csproj" />
+    <ProjectReference Include="../runtime/src/Services/AethericForge.Runtime.Services.Library/AethericForge.Runtime.Services.Library.csproj" />
+    <ProjectReference Include="../runtime/src/Services/AethericForge.Runtime.Services.Staging/AethericForge.Runtime.Services.Staging.csproj" />
+    <ProjectReference Include="../runtime/src/Services/AethericForge.Runtime.Services.Workbench/AethericForge.Runtime.Services.Workbench.csproj" />
+  </ItemGroup>
 </Project>

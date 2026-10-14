@@ -1,10 +1,10 @@
-@page "/track"
+@page "/parallel-you/track"
 @rendermode InteractiveServer
 @using System.ComponentModel.DataAnnotations
 @using AethericForge.Runtime.Models.Knowledge.Authorities
-@using ParallelYou.Abstractions
-@using ParallelYou.Abstractions.Tracking
-@using ParallelYou.Models.Tracking
+@using global::ParallelYou.Abstractions
+@using global::ParallelYou.Abstractions.Tracking
+@using global::ParallelYou.Models.Tracking
 @using ParallelYou.Web.Authentication
 @inject ITrackingService TrackingService
 @inject ICurrentIdentityAccessor CurrentIdentity

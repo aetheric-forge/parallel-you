@@ -4,3 +4,7 @@ bin/
 obj/
 *.DotSettings.user
 .output.txt
+.output/
+TestResults/
+.env
+.env.*

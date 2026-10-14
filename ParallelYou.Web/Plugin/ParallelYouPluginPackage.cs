@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using ParallelYou.Abstractions;
 using ParallelYou.Services;
 using ParallelYou.Web.Hosting;
+using System.Runtime.Loader;
 
 [assembly: InstitutionPluginPackage(typeof(ParallelYou.Web.Plugin.ParallelYouPluginPackage))]
 
@@ -19,6 +20,9 @@ public sealed class ParallelYouPluginPackage : IInstitutionPluginPackage
 /// <summary>Web host adapter discovered through the existing institution plugin loader.</summary>
 public sealed class ParallelYouWebFactory : IInstitutionFactory
 {
+    // Retain the context during discovery, before the host takes ownership of the module.
+    private readonly AssemblyLoadContext _loadContext =
+        AssemblyLoadContext.GetLoadContext(typeof(ParallelYouWebFactory).Assembly)!;
     public Type ContractType => typeof(IParallelYou);
     public IInstitutionTemplate Template { get; } = ParallelYouModule.CreateTemplate();
     public IInstitutionManifest Manifest => Template.Descriptor;

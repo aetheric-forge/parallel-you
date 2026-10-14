@@ -16,6 +16,7 @@ using ParallelYou.Web.Authentication;
 using Forge.Primitives.MongoDb;
 using Forge.Primitives.Redis;
 using MongoDB.Driver;
+using AethericForge.Runtime.Abstractions.Interfaces.Institutions;
 using ParallelYou.Abstractions;
 using ParallelYou.Services;
 using StackExchange.Redis;
@@ -24,8 +25,10 @@ namespace ParallelYou.Web.Hosting;
 
 public static class ParallelYouHosting
 {
-    public static IServiceCollection AddStandaloneParallelYou(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddStandaloneParallelYou(this IServiceCollection services, IConfiguration configuration,
+        Func<IServiceProvider, IInstitution?>? parent = null)
     {
+        MongoBsonSetup.EnsureGuidRepresentationRegistered();
         // Validate the selected module's configuration without requiring unrelated institutions.
         var mongo = InstitutionServiceConfiguration.Resolve(configuration, "ParallelYou", "MongoDb")
             .GetSection("MongoDb").Get<MongoOptions>()!;
@@ -48,10 +51,9 @@ public static class ParallelYouHosting
             options.CommandMap = CommandMap.Create(new HashSet<string> { "CONFIG", "CLUSTER" }, available: false);
             return ConnectionMultiplexer.Connect(options);
         });
-        services.AddParallelYouModule(sp => Create(sp, new ParallelYouContext(
-            ParallelYouModule.CreateTemplate(configuration["ParallelYou:Institution:Name"] ?? "ParallelYou",
-                configuration["ParallelYou:Institution:Version"] ?? "1.0.0",
-                configuration["ParallelYou:Institution:Description"] ?? "A private practice for preserving observations, reflection, and chosen direction."), sp)));
+        services.AddParallelYouModule(sp => parent?.Invoke(sp) is { } owner
+            ? owner.Resolve<IParallelYou>()
+            : Create(sp, CreateContext(configuration, sp)));
         services.AddParallelYouAccessors();
         return services;
     }
@@ -71,6 +73,12 @@ public static class ParallelYouHosting
         var staging = ParallelYouModule.Stages.Select(stage => (IStagingProvider)new RedisStagingProvider(connection, stage));
         return ParallelYouModule.Create(context, CreateLibrarian(knowledge), CreateArtificer(staging));
     }
+
+    internal static ParallelYouContext CreateContext(IConfiguration configuration, IServiceProvider services,
+        IInstitution? parent = null) => new(ParallelYouModule.CreateTemplate(
+            configuration["ParallelYou:Institution:Name"] ?? "ParallelYou",
+            configuration["ParallelYou:Institution:Version"] ?? "1.0.0",
+            configuration["ParallelYou:Institution:Description"] ?? "A private practice for preserving observations, reflection, and chosen direction."), services, parent);
 
     public static ILibrarian CreateLibrarian(IKnowledgeProvider knowledge) =>
         new Librarian(new KnowledgeService([knowledge], new Team<ICuratorClerk>([])), new Team<ILibraryClerk>([]));
